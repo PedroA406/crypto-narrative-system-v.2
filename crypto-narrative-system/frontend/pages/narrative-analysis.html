@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Crypto Narrative System - Narrative Intelligence"
+    >
+
+    <title>Crypto Narrative System — Narrative Intelligence</title>
+
+    <!-- =====================================================
+         FONTE
+         ===================================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- =====================================================
+         CSS DA PÁGINA
+         ===================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="../assets/css/narrative-analysis.css"
+    >
+
+    <!-- =====================================================
+         CHART.JS
+         ===================================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js"
+    ></script>
+
+</head>
+
+
+<body>
+
+<div class="app-shell">
+
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <aside
+        class="sidebar"
+        id="sidebar"
+    >
+
+        <div class="sidebar-top">
+
+            <!-- BRAND -->
+
+            <div class="brand">
+
+                <div class="brand-symbol">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <div class="brand-text">
+
+                    <strong>
+                        CRYPTO
+                    </strong>
+
+                    <span>
+                        NARRATIVE SYSTEM
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div class="system-status">
+
+                <span class="status-indicator"></span>
+
+                <div>
+
+                    <strong>
+                        Intelligence Core
+                    </strong>
+
+                    <small id="systemStatusText">
+                        Conectando...
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <!-- NAVEGAÇÃO -->
+
+            <nav class="main-navigation">
+
+                <div class="navigation-label">
+                    PLATAFORMA
+                </div>
+
+
+                <a
+                    href="dashboard.html"
+                    class="nav-item"
+                >
+
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/>
+                        </svg>
+                    </span>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <button
+                    class="nav-item active"
+                    data-scroll="overview"
+                >
+
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 19V5m0 14h16M7 15l3-4 3 2 4-6"/>
+                        </svg>
+                    </span>
+
+                    <span>
+                        Narrative Intelligence
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-scroll="temporal"
+                >
+
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="8"/>
+                            <path d="M12 8v5l3 2"/>
+                        </svg>
+                    </span>
+
+                    <span>
+                        Evolução Temporal
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-scroll="relations"
+                >
+
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="6" cy="12" r="2"/>
+                            <circle cx="18" cy="6" r="2"/>
+                            <circle cx="18" cy="18" r="2"/>
+                            <path d="m8 11 8-4M8 13l8 4"/>
+                        </svg>
+                    </span>
+
+                    <span>
+                        Relações
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-scroll="methodology"
+                >
+
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 4h14v16H5z"/>
+                            <path d="M8 8h8M8 12h8M8 16h5"/>
+                        </svg>
+                    </span>
+
+                    <span>
+                        Metodologia
+                    </span>
+
+                </button>
+
+            </nav>
+
+        </div>
+
+
+        <!-- PARTE INFERIOR -->
+
+        <div class="sidebar-bottom">
+
+            <button
+                class="nav-item"
+                id="profileButton"
+            >
+
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="8" r="3"/>
+                        <path d="M5 20c.8-3.3 3.1-5 7-5s6.2 1.7 7 5"/>
+                    </svg>
+                </span>
+
+                <span>
+                    Perfil
+                </span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                id="settingsButton"
+            >
+
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>
+                        <path d="m5.6 5.6 1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/>
+                        <circle cx="12" cy="12" r="4"/>
+                    </svg>
+                </span>
+
+                <span>
+                    Configurações
+                </span>
+
+            </button>
+
+
+            <div class="sidebar-version">
+
+                <span>
+                    CNS
+                </span>
+
+                <small>
+                    Intelligence Interface
+                </small>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         ÁREA PRINCIPAL
+         ===================================================== -->
+
+    <main class="main-content">
+
+
+        <!-- =================================================
+             TOPBAR
+             ================================================= -->
+
+        <header class="topbar">
+
+            <div class="mobile-brand">
+
+                <button
+                    id="mobileMenuButton"
+                    class="mobile-menu-button"
+                    aria-label="Abrir menu"
+                >
+                    ☰
+                </button>
+
+                <strong>
+                    CNS
+                </strong>
+
+            </div>
+
+
+            <div class="topbar-context">
+
+                <span class="topbar-kicker">
+                    INTELLIGENCE LAYER
+                </span>
+
+                <h1>
+                    Narrative Intelligence
+                </h1>
+
+            </div>
+
+
+            <div class="topbar-actions">
+
+                <div class="live-pill">
+
+                    <span></span>
+
+                    LIVE DATA
+
+                </div>
+
+
+                <button
+                    class="refresh-button"
+                    id="refreshButton"
+                >
+
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 5v4h4"/>
+                        <path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/>
+                    </svg>
+
+                    <span>
+                        Atualizar
+                    </span>
+
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- =================================================
+             CONTEÚDO
+             ================================================= -->
+
+        <div class="page-content">
+
+
+            <!-- =================================================
+                 HERO
+                 ================================================= -->
+
+            <section
+                class="intelligence-hero"
+                id="overview"
+            >
+
+                <div class="hero-background-grid"></div>
+
+                <div class="hero-orbit orbit-one"></div>
+                <div class="hero-orbit orbit-two"></div>
+
+                <div class="hero-content">
+
+                    <div class="hero-eyebrow">
+
+                        <span></span>
+
+                        MARKET NARRATIVE ENGINE
+
+                    </div>
+
+
+                    <h2>
+                        Leia o mercado
+                        <br>
+                        através das narrativas.
+                    </h2>
+
+
+                    <p>
+                        Uma camada analítica dedicada à identificação,
+                        distribuição e evolução das narrativas presentes
+                        na base histórica de notícias sobre criptoativos.
+                    </p>
+
+
+                    <div class="hero-meta">
+
+                        <div class="hero-meta-item">
+
+                            <span>
+                                PERÍODO
+                            </span>
+
+                            <strong id="periodValue">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="hero-meta-item">
+
+                            <span>
+                                EIXO TEMPORAL
+                            </span>
+
+                            <strong>
+                                publishedAt
+                            </strong>
+
+                        </div>
+
+
+                        <div class="hero-meta-item">
+
+                            <span>
+                                NARRATIVAS
+                            </span>
+
+                            <strong id="narrativeCount">
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="hero-signal">
+
+                    <div class="signal-ring">
+
+                        <div class="signal-ring-inner">
+
+                            <span>
+                                CNS
+                            </span>
+
+                            <strong>
+                                AI
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="signal-label">
+
+                        <span>
+                            ANALYTICAL CORE
+                        </span>
+
+                        <strong id="generatedAt">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 STATUS
+                 ================================================= -->
+
+            <div class="analysis-status">
+
+                <div class="status-left">
+
+                    <span
+                        class="status-dot"
+                        id="analysisStatusDot"
+                    ></span>
+
+                    <div>
+
+                        <strong id="analysisStatus">
+                            Preparando análise
+                        </strong>
+
+                        <span id="analysisStatusDetail">
+                            Consultando o núcleo analítico...
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <span
+                    class="analysis-update"
+                    id="analysisUpdate"
+                >
+                    —
+                </span>
+
+            </div>
+
+
+            <!-- =================================================
+                 KPIs
+                 ================================================= -->
+
+            <section class="kpi-grid">
+
+                <article class="kpi-card">
+
+                    <div class="kpi-icon blue">
+
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="8"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+
+                    </div>
+
+                    <span class="kpi-label">
+                        Notícias analisadas
+                    </span>
+
+                    <strong
+                        class="kpi-value"
+                        id="analysisNewsCount"
+                    >
+                        —
+                    </strong>
+
+                    <span class="kpi-description">
+                        Registros com classificação narrativa ML.
+                    </span>
+
+                </article>
+
+
+                <article class="kpi-card">
+
+                    <div class="kpi-icon purple">
+
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 4a8 8 0 1 1-7.4 11"/>
+                            <path d="M12 4v8l5 3"/>
+                        </svg>
+
+                    </div>
+
+                    <span class="kpi-label">
+                        Confiança média
+                    </span>
+
+                    <strong
+                        class="kpi-value"
+                        id="analysisConfidence"
+                    >
+                        —
+                    </strong>
+
+                    <span class="kpi-description">
+                        Indicador relativo da classificação ML.
+                    </span>
+
+                </article>
+
+
+                <article class="kpi-card">
+
+                    <div class="kpi-icon green">
+
+                        <svg viewBox="0 0 24 24">
+                            <path d="m5 12 4 4L19 6"/>
+                        </svg>
+
+                    </div>
+
+                    <span class="kpi-label">
+                        Concordância
+                    </span>
+
+                    <strong
+                        class="kpi-value"
+                        id="analysisAgreement"
+                    >
+                        —
+                    </strong>
+
+                    <span class="kpi-description">
+                        Narrativa original × classificação ML.
+                    </span>
+
+                </article>
+
+
+                <article class="kpi-card">
+
+                    <div class="kpi-icon orange">
+
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="8"/>
+                            <path d="M12 8v5l3 2"/>
+                        </svg>
+
+                    </div>
+
+                    <span class="kpi-label">
+                        Latência média
+                    </span>
+
+                    <strong
+                        class="kpi-value"
+                        id="analysisLatency"
+                    >
+                        —
+                    </strong>
+
+                    <span class="kpi-description">
+                        Diferença entre publicação e aquisição.
+                    </span>
+
+                </article>
+
+            </section>
+
+
+            <!-- =================================================
+                 NARRATIVAS
+                 ================================================= -->
+
+            <section class="section-block">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-eyebrow">
+                            01 / NARRATIVE MAP
+                        </span>
+
+                        <h2>
+                            Arquitetura das narrativas
+                        </h2>
+
+                        <p>
+                            Distribuição das categorias identificadas
+                            pela camada de classificação.
+                        </p>
+
+                    </div>
+
+                    <span class="section-tag">
+                        CLASSIFICATION
+                    </span>
+
+                </div>
+
+
+                <div class="two-column-grid">
+
+
+                    <!-- DISTRIBUIÇÃO -->
+
+                    <article class="analysis-card narrative-map-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Distribuição narrativa
+                                </h3>
+
+                                <span>
+                                    Participação relativa na base analisada
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="donut-layout">
+
+                            <div class="donut-container">
+
+                                <canvas
+                                    id="narrativeDistributionChart"
+                                ></canvas>
+
+                                <div class="donut-center">
+
+                                    <strong id="donutTotal">
+                                        —
+                                    </strong>
+
+                                    <span>
+                                        notícias
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                id="narrativeDistributionLegend"
+                                class="chart-legend"
+                            ></div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- RANKING -->
+
+                    <article class="analysis-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Mapa de presença
+                                </h3>
+
+                                <span>
+                                    Narrativas por volume observado
+                                </span>
+
+                            </div>
+
+                            <span class="card-index">
+                                8
+                            </span>
+
+                        </div>
+
+
+                        <div
+                            id="narrativeRanking"
+                            class="ranking-list"
+                        >
+
+                            <div class="loading-state">
+                                Carregando...
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 EVOLUÇÃO
+                 ================================================= -->
+
+            <section
+                class="section-block"
+                id="temporal"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-eyebrow">
+                            02 / TEMPORAL INTELLIGENCE
+                        </span>
+
+                        <h2>
+                            Evolução das narrativas
+                        </h2>
+
+                        <p>
+                            Acompanhe como a presença das categorias
+                            se distribui ao longo do período histórico.
+                        </p>
+
+                    </div>
+
+                    <span class="section-tag">
+                        publishedAt
+                    </span>
+
+                </div>
+
+
+                <article class="analysis-card temporal-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <h3>
+                                Linha temporal narrativa
+                            </h3>
+
+                            <span>
+                                Frequência mensal das classificações
+                            </span>
+
+                        </div>
+
+                        <span
+                            class="temporal-current"
+                            id="temporalCurrent"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+
+                    <div class="large-chart">
+
+                        <canvas
+                            id="narrativeEvolutionChart"
+                        ></canvas>
+
+                    </div>
+
+
+                    <div
+                        id="temporalNarrativeSummary"
+                        class="temporal-summary"
+                    ></div>
+
+                </article>
+
+            </section>
+
+
+            <!-- =================================================
+                 RELAÇÕES
+                 ================================================= -->
+
+            <section
+                class="section-block"
+                id="relations"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-eyebrow">
+                            03 / RELATION LAYER
+                        </span>
+
+                        <h2>
+                            Relações observadas
+                        </h2>
+
+                        <p>
+                            Cruzamentos entre narrativas, sentimento
+                            e ativos presentes na base.
+                        </p>
+
+                    </div>
+
+                    <span class="section-tag">
+                        ASSOCIATIONS
+                    </span>
+
+                </div>
+
+
+                <div class="two-column-grid">
+
+
+                    <!-- SENTIMENTO -->
+
+                    <article class="analysis-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Narrativa × sentimento
+                                </h3>
+
+                                <span>
+                                    Distribuição das classes de sentimento
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="narrativeSentimentMatrix"
+                            class="matrix-wrapper"
+                        >
+
+                            <div class="loading-state">
+                                Carregando...
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="sentimentSummary"
+                            class="sentiment-summary"
+                        ></div>
+
+                    </article>
+
+
+                    <!-- SENTIMENTO GLOBAL -->
+
+                    <article class="analysis-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Panorama de sentimento
+                                </h3>
+
+                                <span>
+                                    Distribuição global da base
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="sentiment-chart">
+
+                            <canvas
+                                id="sentimentDistributionChart"
+                            ></canvas>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+
+                <!-- MOEDAS -->
+
+                <article class="analysis-card coin-relation-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <h3>
+                                Narrativa × ativo
+                            </h3>
+
+                            <span>
+                                Volume de notícias por categoria e moeda
+                            </span>
+
+                        </div>
+
+                        <span class="card-index">
+                            DATA MATRIX
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="narrativeCoinMatrix"
+                        class="matrix-wrapper"
+                    >
+
+                        <div class="loading-state">
+                            Carregando...
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- =================================================
+                 QUALIDADE ANALÍTICA
+                 ================================================= -->
+
+            <section class="section-block">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-eyebrow">
+                            04 / MODEL QUALITY
+                        </span>
+
+                        <h2>
+                            Qualidade da classificação
+                        </h2>
+
+                        <p>
+                            Indicadores de confiança e concordância
+                            entre as camadas de classificação.
+                        </p>
+
+                    </div>
+
+                    <span class="section-tag">
+                        ML SIGNAL
+                    </span>
+
+                </div>
+
+
+                <div class="quality-grid">
+
+
+                    <!-- CONFIANÇA -->
+
+                    <article class="analysis-card confidence-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Confiança relativa
+                                </h3>
+
+                                <span>
+                                    Distribuição do sinal de confiança
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="confidence-content">
+
+                            <div
+                                class="confidence-ring"
+                                id="confidenceRing"
+                            >
+
+                                <div class="confidence-ring-inner">
+
+                                    <strong
+                                        id="confidenceRingValue"
+                                    >
+                                        —
+                                    </strong>
+
+                                    <span>
+                                        média
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="confidence-details">
+
+                                <div>
+
+                                    <span>
+                                        MÍNIMA
+                                    </span>
+
+                                    <strong id="confidenceMin">
+                                        —
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        MÁXIMA
+                                    </span>
+
+                                    <strong id="confidenceMax">
+                                        —
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        AMOSTRA
+                                    </span>
+
+                                    <strong id="confidenceTotal">
+                                        —
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="analysis-note"
+                            id="confidenceInterpretation"
+                        >
+                            —
+                        </div>
+
+                    </article>
+
+
+                    <!-- CONCORDÂNCIA -->
+
+                    <article class="analysis-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Concordância de classificação
+                                </h3>
+
+                                <span>
+                                    Comparação entre regra original e ML
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="agreement-content">
+
+                            <div class="agreement-main">
+
+                                <span>
+                                    CONCORDÂNCIA
+                                </span>
+
+                                <strong id="agreementValue">
+                                    —
+                                </strong>
+
+                            </div>
+
+
+                            <div class="agreement-bar">
+
+                                <div
+                                    id="agreementBar"
+                                    class="agreement-bar-fill"
+                                ></div>
+
+                            </div>
+
+
+                            <div class="agreement-values">
+
+                                <div>
+
+                                    <span>
+                                        CONCORDANTES
+                                    </span>
+
+                                    <strong id="agreementCount">
+                                        —
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        DIVERGENTES
+                                    </span>
+
+                                    <strong id="divergenceCount">
+                                        —
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 PROVENIÊNCIA
+                 ================================================= -->
+
+            <section class="section-block">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-eyebrow">
+                            05 / DATA PROVENANCE
+                        </span>
+
+                        <h2>
+                            Proveniência da aquisição
+                        </h2>
+
+                        <p>
+                            Indicador operacional sobre o intervalo
+                            entre publicação e entrada na base.
+                        </p>
+
+                    </div>
+
+                    <span class="section-tag">
+                        createdAt
+                    </span>
+
+                </div>
+
+
+                <article class="analysis-card provenance-card">
+
+                    <div class="provenance-grid">
+
+                        <div class="provenance-item">
+
+                            <span>
+                                LATÊNCIA MÉDIA
+                            </span>
+
+                            <strong id="latencyHours">
+                                —
+                            </strong>
+
+                            <small>
+                                horas
+                            </small>
+
+                        </div>
+
+
+                        <div class="provenance-item">
+
+                            <span>
+                                LATÊNCIA EM MINUTOS
+                            </span>
+
+                            <strong id="latencyMinutes">
+                                —
+                            </strong>
+
+                            <small>
+                                minutos
+                            </small>
+
+                        </div>
+
+
+                        <div class="provenance-item">
+
+                            <span>
+                                LATÊNCIA EM DIAS
+                            </span>
+
+                            <strong id="latencyDays">
+                                —
+                            </strong>
+
+                            <small>
+                                dias
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="provenance-note">
+
+                        <span class="note-icon">
+                            i
+                        </span>
+
+                        <p>
+                            A latência representa uma característica
+                            do processo de aquisição dos dados. Ela não
+                            é utilizada como classificação narrativa.
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- =================================================
+                 METODOLOGIA
+                 ================================================= -->
+
+            <section
+                class="section-block"
+                id="methodology"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-eyebrow">
+                            06 / METHODOLOGY
+                        </span>
+
+                        <h2>
+                            Como esta inteligência é construída
+                        </h2>
+
+                        <p>
+                            Transparência sobre as dimensões apresentadas
+                            nesta interface.
+                        </p>
+
+                    </div>
+
+                    <span class="section-tag">
+                        TRACEABLE
+                    </span>
+
+                </div>
+
+
+                <div class="methodology-grid">
+
+
+                    <article class="method-card">
+
+                        <div class="method-number">
+                            01
+                        </div>
+
+                        <h3>
+                            Eixo temporal
+                        </h3>
+
+                        <p>
+                            A evolução das narrativas utiliza
+                            <strong>publishedAt</strong>, preservando
+                            o momento original de publicação da notícia.
+                        </p>
+
+                    </article>
+
+
+                    <article class="method-card">
+
+                        <div class="method-number">
+                            02
+                        </div>
+
+                        <h3>
+                            Classificação ML
+                        </h3>
+
+                        <p>
+                            As categorias exibidas são obtidas do campo
+                            <strong>narrativeML</strong> armazenado
+                            no MongoDB.
+                        </p>
+
+                    </article>
+
+
+                    <article class="method-card">
+
+                        <div class="method-number">
+                            03
+                        </div>
+
+                        <h3>
+                            Confiança
+                        </h3>
+
+                        <p>
+                            A confiança apresentada é um indicador
+                            relativo associado à classificação do modelo,
+                            não uma probabilidade calibrada de acerto.
+                        </p>
+
+                    </article>
+
+
+                    <article class="method-card">
+
+                        <div class="method-number">
+                            04
+                        </div>
+
+                        <h3>
+                            Concordância
+                        </h3>
+
+                        <p>
+                            A comparação utiliza a narrativa original
+                            e a classificação ML armazenadas em cada
+                            registro.
+                        </p>
+
+                    </article>
+
+
+                    <article class="method-card">
+
+                        <div class="method-number">
+                            05
+                        </div>
+
+                        <h3>
+                            Sentimento
+                        </h3>
+
+                        <p>
+                            O sentimento é apresentado como dimensão
+                            associada às narrativas, sem assumir
+                            relação causal entre as variáveis.
+                        </p>
+
+                    </article>
+
+
+                    <article class="method-card">
+
+                        <div class="method-number">
+                            06
+                        </div>
+
+                        <h3>
+                            Proveniência
+                        </h3>
+
+                        <p>
+                            A diferença entre <strong>createdAt</strong>
+                            e <strong>publishedAt</strong> permite
+                            observar a latência de aquisição.
+                        </p>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FOOTER
+                 ================================================= -->
+
+            <footer class="page-footer">
+
+                <div>
+
+                    <strong>
+                        CRYPTO NARRATIVE SYSTEM
+                    </strong>
+
+                    <span>
+                        Narrative Intelligence Interface
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Dados provenientes do núcleo analítico
+                    </span>
+
+                    <span id="footerGeneratedAt">
+                        —
+                    </span>
+
+                </div>
+
+            </footer>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- =========================================================
+     MOBILE OVERLAY
+     ========================================================= -->
+
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+></div>
+
+
+<!-- =========================================================
+     MODAL PERFIL
+     ========================================================= -->
+
+<div
+    class="modal"
+    id="profileModal"
+>
+
+    <div class="modal-card">
+
+        <button
+            class="modal-close"
+            data-close-modal="profileModal"
+        >
+            ×
+        </button>
+
+        <span class="modal-eyebrow">
+            USER PROFILE
+        </span>
+
+        <h2>
+            Perfil do sistema
+        </h2>
+
+        <p>
+            Espaço reservado para identificação do usuário,
+            preferências de visualização e informações da sessão.
+        </p>
+
+        <div class="modal-info">
+
+            <div>
+                <span>
+                    SISTEMA
+                </span>
+
+                <strong>
+                    Crypto Narrative System
+                </strong>
+            </div>
+
+            <div>
+                <span>
+                    INTERFACE
+                </span>
+
+                <strong>
+                    Narrative Intelligence
+                </strong>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL CONFIGURAÇÕES
+     ========================================================= -->
+
+<div
+    class="modal"
+    id="settingsModal"
+>
+
+    <div class="modal-card">
+
+        <button
+            class="modal-close"
+            data-close-modal="settingsModal"
+        >
+            ×
+        </button>
+
+        <span class="modal-eyebrow">
+            SYSTEM SETTINGS
+        </span>
+
+        <h2>
+            Configurações
+        </h2>
+
+        <p>
+            Preferências da interface de inteligência.
+        </p>
+
+
+        <div class="settings-option">
+
+            <div>
+
+                <strong>
+                    Atualização automática
+                </strong>
+
+                <span>
+                    Atualizar os dados periodicamente.
+                </span>
+
+            </div>
+
+            <label class="switch">
+
+                <input
+                    type="checkbox"
+                    id="autoRefreshToggle"
+                >
+
+                <span></span>
+
+            </label>
+
+        </div>
+
+
+        <div class="settings-option">
+
+            <div>
+
+                <strong>
+                    Animações da interface
+                </strong>
+
+                <span>
+                    Ativar efeitos visuais suaves.
+                </span>
+
+            </div>
+
+            <label class="switch">
+
+                <input
+                    type="checkbox"
+                    id="animationToggle"
+                    checked
+                >
+
+                <span></span>
+
+            </label>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
+<script
+    src="../assets/js/narrative-analysis.js"
+></script>
+
+</body>
+
+</html>
