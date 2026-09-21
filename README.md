@@ -1,3 +1,27 @@
+
+EXECUTE.
+npm install
+npm run dev
+
+http://localhost:3000
+
+express
+mongoose
+cors
+dotenv
+axios
+nodemon. 
+
+1. Node.js
+2. Git
+3. VS Code
+4. Clonar/copiar o projeto
+5. npm install
+6. Configurar .env
+7. Configurar acesso ao MongoDB Atlas
+8. npm run dev
+9. Abrir o dashboard no navegador
+
 # crypto-narrative-system-v.2
 
 Dashboard → visão operacional do mercado.
