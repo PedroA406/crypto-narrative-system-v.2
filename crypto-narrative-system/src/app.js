@@ -8,71 +8,42 @@ const narrativeAnalysisRoutes = require("./routes/narrativeAnalysisRoutes");
 
 const app = express();
 
+
+// ============================================================
+// CONFIGURAÇÕES
+// ============================================================
+
 app.use(cors());
 
 app.use(express.json());
 
 
-/*
-|--------------------------------------------------------------------------
-| FRONTEND
-|--------------------------------------------------------------------------
-|
-| O frontend está na pasta:
-|
-| /frontend
-|
-| Como este arquivo está em:
-|
-| /src/app.js
-|
-| o caminho correto é:
-|
-| ../frontend
-|
-*/
+// ============================================================
+// FRONTEND
+// ============================================================
 
+// Disponibiliza a pasta assets
 app.use(
+    "/assets",
     express.static(
-        path.join(__dirname, "../frontend")
+        path.join(__dirname, "../frontend/assets")
     )
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| ROTAS DO MERCADO
-|--------------------------------------------------------------------------
-*/
+// ============================================================
+// ROTAS DA API
+// ============================================================
 
 app.use(
     "/market",
     marketRoutes
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| ROTAS DE SENTIMENTO
-|--------------------------------------------------------------------------
-*/
-
 app.use(
     "/sentiment",
     sentimentRoutes
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| ROTAS DE ANÁLISE DE NARRATIVAS
-|--------------------------------------------------------------------------
-|
-| Endpoint principal:
-|
-| GET /market/narratives/analysis
-|
-*/
 
 app.use(
     "/market/narratives",
@@ -80,18 +51,9 @@ app.use(
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| ROTA PRINCIPAL
-|--------------------------------------------------------------------------
-|
-| Ao acessar a URL principal do sistema:
-|
-| https://crypto-narrative-system.onrender.com
-|
-| o Dashboard será carregado.
-|
-*/
+// ============================================================
+// PÁGINA INICIAL
+// ============================================================
 
 app.get(
     "/",
@@ -100,12 +62,54 @@ app.get(
         res.sendFile(
             path.join(
                 __dirname,
-                "../frontend/dashboard.html"
+                "../frontend/pages/dashboard.html"
             )
         );
 
     }
 );
 
+
+// ============================================================
+// PÁGINA DO DASHBOARD
+// ============================================================
+
+app.get(
+    "/dashboard",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../frontend/pages/dashboard.html"
+            )
+        );
+
+    }
+);
+
+
+// ============================================================
+// PÁGINA DE INTELIGÊNCIA DE NARRATIVAS
+// ============================================================
+
+app.get(
+    "/narrative-analysis",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../frontend/pages/narrative-analysis.html"
+            )
+        );
+
+    }
+);
+
+
+// ============================================================
+// EXPORTAÇÃO
+// ============================================================
 
 module.exports = app;
