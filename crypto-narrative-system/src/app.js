@@ -19,10 +19,9 @@ app.use(express.json());
 
 
 // ============================================================
-// FRONTEND
+// ARQUIVOS ESTÁTICOS
 // ============================================================
 
-// Disponibiliza a pasta assets
 app.use(
     "/assets",
     express.static(
@@ -52,7 +51,7 @@ app.use(
 
 
 // ============================================================
-// PÁGINA INICIAL
+// DASHBOARD
 // ============================================================
 
 app.get(
@@ -71,7 +70,7 @@ app.get(
 
 
 // ============================================================
-// PÁGINA DO DASHBOARD
+// DASHBOARD - ROTA DIRETA
 // ============================================================
 
 app.get(
@@ -90,7 +89,7 @@ app.get(
 
 
 // ============================================================
-// PÁGINA DE INTELIGÊNCIA DE NARRATIVAS
+// NARRATIVE INTELLIGENCE
 // ============================================================
 
 app.get(
@@ -109,7 +108,22 @@ app.get(
 
 
 // ============================================================
-// EXPORTAÇÃO
+// NARRATIVE INTELLIGENCE - ARQUIVO DIRETO
 // ============================================================
+
+app.get(
+    "/narrative-analysis.html",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../frontend/pages/narrative-analysis.html"
+            )
+        );
+
+    }
+);
+
 
 module.exports = app;
