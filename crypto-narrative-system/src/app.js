@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const marketRoutes = require("./routes/marketRoutes");
 const sentimentRoutes = require("./routes/sentimentRoutes");
@@ -14,11 +15,40 @@ app.use(express.json());
 
 /*
 |--------------------------------------------------------------------------
+| FRONTEND
+|--------------------------------------------------------------------------
+|
+| O frontend está na pasta:
+|
+| /frontend
+|
+| Como este arquivo está em:
+|
+| /src/app.js
+|
+| o caminho correto é:
+|
+| ../frontend
+|
+*/
+
+app.use(
+    express.static(
+        path.join(__dirname, "../frontend")
+    )
+);
+
+
+/*
+|--------------------------------------------------------------------------
 | ROTAS DO MERCADO
 |--------------------------------------------------------------------------
 */
 
-app.use("/market", marketRoutes);
+app.use(
+    "/market",
+    marketRoutes
+);
 
 
 /*
@@ -27,7 +57,10 @@ app.use("/market", marketRoutes);
 |--------------------------------------------------------------------------
 */
 
-app.use("/sentiment", sentimentRoutes);
+app.use(
+    "/sentiment",
+    sentimentRoutes
+);
 
 
 /*
@@ -44,6 +77,34 @@ app.use("/sentiment", sentimentRoutes);
 app.use(
     "/market/narratives",
     narrativeAnalysisRoutes
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| ROTA PRINCIPAL
+|--------------------------------------------------------------------------
+|
+| Ao acessar a URL principal do sistema:
+|
+| https://crypto-narrative-system.onrender.com
+|
+| o Dashboard será carregado.
+|
+*/
+
+app.get(
+    "/",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../frontend/dashboard.html"
+            )
+        );
+
+    }
 );
 
 
