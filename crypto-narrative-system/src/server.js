@@ -25,7 +25,7 @@ const PORT =
 /*
  * Por segurança, os coletores ficam DESATIVADOS
  * quando ENABLE_COLLECTORS não estiver explicitamente
- * configurado como "true" no arquivo .env.
+ * configurado como "true" no ambiente.
  *
  * Para ativar:
  *
@@ -184,8 +184,10 @@ async function startServer() {
             console.log("SISTEMA ONLINE");
 
             console.log(
-                `HORÁRIO: ${new Date()
-                    .toLocaleString("pt-BR")}`
+                `HORÁRIO: ${
+                    new Date()
+                        .toLocaleString("pt-BR")
+                }`
             );
 
             console.log(
@@ -205,29 +207,36 @@ async function startServer() {
         /* START API */
         /* ===================================================== */
 
-        app.listen(PORT, () => {
+        app.listen(
+            PORT,
+            "0.0.0.0",
+            () => {
 
-            console.log("=================================");
+                console.log("=================================");
 
-            console.log(
-                `SERVIDOR RODANDO NA PORTA ${PORT}`
-            );
+                console.log(
+                    `SERVIDOR RODANDO NA PORTA ${PORT}`
+                );
 
-            console.log(
-                `URL: http://localhost:${PORT}`
-            );
+                console.log(
+                    `AMBIENTE: ${
+                        process.env.NODE_ENV ||
+                        "development"
+                    }`
+                );
 
-            console.log(
-                `COLETORES: ${
-                    ENABLE_COLLECTORS
-                        ? "ATIVADOS"
-                        : "DESATIVADOS"
-                }`
-            );
+                console.log(
+                    `COLETORES: ${
+                        ENABLE_COLLECTORS
+                            ? "ATIVADOS"
+                            : "DESATIVADOS"
+                    }`
+                );
 
-            console.log("=================================");
+                console.log("=================================");
 
-        });
+            }
+        );
 
     } catch (error) {
 
