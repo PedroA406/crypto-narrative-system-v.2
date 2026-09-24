@@ -1,78 +1,296 @@
-/* ============================================================
-   CRYPTO NARRATIVE SYSTEM
-   NARRATIVE × PRICE
-   ============================================================ */
+/*
+============================================================
+CRYPTO NARRATIVE SYSTEM
+ANÁLISE NARRATIVA × PREÇO
+============================================================
+*/
 
 
-const API_BASE_URL =
-    window.API_BASE_URL ||
-    "https://crypto-narrative-system.onrender.com";
+/*
+============================================================
+CONFIGURAÇÕES
+============================================================
+*/
 
-
-let selectedPeriod =
-    "30d";
-
-
-let selectedAsset =
-    "ALL";
+const API_URL =
+    "/api/narrative-analysis";
 
 
 let analysisData =
     null;
 
 
-let scatterChart =
-    null;
+let charts = {};
 
 
-let timelineChart =
-    null;
+/*
+============================================================
+ELEMENTOS
+============================================================
+*/
+
+const coinSelector =
+    document.getElementById("coinSelector");
+
+const periodSelector =
+    document.getElementById("periodSelector");
+
+const refreshButton =
+    document.getElementById("refreshAnalysis");
+
+const analysisStatus =
+    document.getElementById("analysisStatus");
 
 
-/* ============================================================
-   INICIALIZAÇÃO
-   ============================================================ */
+/*
+============================================================
+FORMATAÇÃO
+============================================================
+*/
 
-document.addEventListener(
-    "DOMContentLoaded",
-    initializeNarrativePrice
-);
+function formatNumber(
+    value,
+    decimals = 2
+) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        Number.isNaN(Number(value))
+    ) {
+
+        return "—";
+
+    }
 
 
-async function initializeNarrativePrice() {
-
-    await loadAssets();
-
-    await loadNarrativePriceAnalysis();
+    return Number(value).toLocaleString(
+        "pt-BR",
+        {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        }
+    );
 
 }
 
 
-/* ============================================================
-   CARREGAR ATIVOS
-   ============================================================ */
+function formatPrice(value) {
 
-async function loadAssets() {
+    if (
+        value === null ||
+        value === undefined ||
+        Number.isNaN(Number(value))
+    ) {
 
-    const selector =
-        document.getElementById(
-            "assetSelector"
-        );
+        return "—";
 
-
-    if (!selector) {
-        return;
     }
 
 
+    const number =
+        Number(value);
+
+
+    if (number >= 1000) {
+
+        return number.toLocaleString(
+            "pt-BR",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+
+    }
+
+
+    if (number >= 1) {
+
+        return number.toLocaleString(
+            "pt-BR",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 4
+            }
+        );
+
+    }
+
+
+    return number.toLocaleString(
+        "pt-BR",
+        {
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 8
+        }
+    );
+
+}
+
+
+function formatPercent(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        Number.isNaN(Number(value))
+    ) {
+
+        return "—";
+
+    }
+
+
+    const number =
+        Number(value);
+
+
+    const prefix =
+        number > 0
+            ? "+"
+            : "";
+
+
+    return (
+        prefix +
+        number.toLocaleString(
+            "pt-BR",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        ) +
+        "%"
+    );
+
+}
+
+
+function formatCorrelation(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        Number.isNaN(Number(value))
+    ) {
+
+        return "—";
+
+    }
+
+
+    return Number(value).toLocaleString(
+        "pt-BR",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
+
+}
+
+
+/*
+============================================================
+CORES
+============================================================
+*/
+
+const COLORS = {
+
+    green:
+        "#35d39a",
+
+    red:
+        "#ff7272",
+
+    blue:
+        "#4ea8ff",
+
+    yellow:
+        "#e8c96d",
+
+    neutral:
+        "#7f9690",
+
+    purple:
+        "#9b7cff",
+
+    cyan:
+        "#5ed7d1"
+
+};
+
+
+/*
+============================================================
+CONFIGURAÇÃO GLOBAL DO CHART.JS
+============================================================
+*/
+
+Chart.defaults.color =
+    "#809590";
+
+Chart.defaults.borderColor =
+    "rgba(255,255,255,0.06)";
+
+Chart.defaults.font.family =
+    "Inter, Arial, Helvetica, sans-serif";
+
+
+/*
+============================================================
+STATUS
+============================================================
+*/
+
+function setStatus(
+    message,
+    error = false
+) {
+
+    analysisStatus.textContent =
+        message;
+
+
+    analysisStatus.style.color =
+        error
+            ? COLORS.red
+            : "#718984";
+
+}
+
+
+/*
+============================================================
+CARREGAR DADOS
+============================================================
+*/
+
+async function carregarAnalise() {
+
     try {
+
+        setStatus(
+            "Carregando análise de mercado..."
+        );
+
+
+        refreshButton.disabled =
+            true;
+
 
         const response =
             await fetch(
-                `${API_BASE_URL}/market/coins`,
+                API_URL,
                 {
-                    cache:
-                        "no-store"
+                    method: "GET",
+                    cache: "no-store"
                 }
             );
 
@@ -80,423 +298,618 @@ async function loadAssets() {
         if (!response.ok) {
 
             throw new Error(
-                `HTTP ${response.status}`
+                `Erro HTTP ${response.status}`
             );
 
         }
 
 
-        const coins =
+        const result =
             await response.json();
 
 
-        coins.forEach(
-            coin => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    coin.coinId ||
-                    coin.id;
-
-
-                option.textContent =
-                    `${coin.name} (${String(
-                        coin.symbol || ""
-                    ).toUpperCase()})`;
-
-
-                selector.appendChild(
-                    option
-                );
-
-            }
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "ERRO AO CARREGAR ATIVOS:",
-            error
-        );
-
-    }
-
-}
-
-
-/* ============================================================
-   CARREGAR ANÁLISE
-   ============================================================ */
-
-async function loadNarrativePriceAnalysis() {
-
-    const status =
-        document.getElementById(
-            "priceAnalysisStatus"
-        );
-
-
-    if (status) {
-
-        status.textContent =
-            "Calculando relação entre narrativas e preços...";
-
-    }
-
-
-    try {
-
-        const url =
-            `${API_BASE_URL}/market/narrative-price` +
-            `?period=${encodeURIComponent(
-                selectedPeriod
-            )}` +
-            `&asset=${encodeURIComponent(
-                selectedAsset
-            )}`;
-
-
-        const response =
-            await fetch(
-                url,
-                {
-                    cache:
-                        "no-store"
-                }
-            );
-
-
-        if (!response.ok) {
-
-            const errorData =
-                await response.json()
-                    .catch(
-                        () => ({})
-                    );
-
+        if (
+            !result.success
+        ) {
 
             throw new Error(
-                errorData.error ||
-                `HTTP ${response.status}`
+                result.message ||
+                "A API não retornou uma análise válida."
             );
 
         }
 
 
         analysisData =
-            await response.json();
+            result.data;
 
 
-        renderAnalysis();
+        preencherMoedas();
 
 
-        if (status) {
+        atualizarInterface();
 
-            status.textContent =
-                `Análise atualizada em ${formatDateTime(
-                    analysisData.generatedAt
-                )}.`;
 
-        }
+        setStatus(
+            "Análise atualizada com sucesso."
+        );
 
 
     } catch (error) {
 
         console.error(
-            "ERRO AO CARREGAR NARRATIVE × PRICE:",
+            "Erro ao carregar análise:",
             error
         );
 
 
-        if (status) {
+        setStatus(
+            "Não foi possível carregar os dados da análise.",
+            true
+        );
 
-            status.textContent =
-                `Não foi possível carregar a análise: ${error.message}`;
-
-        }
-
-    }
-
-}
-
-
-/* ============================================================
-   PERÍODO
-   ============================================================ */
-
-function changePricePeriod(
-    period
-) {
-
-    if (
-        ![
-            "7d",
-            "30d",
-            "60d"
-        ].includes(period)
-    ) {
-
-        return;
-
-    }
-
-
-    selectedPeriod =
-        period;
-
-
-    document
-        .querySelectorAll(
-            ".analysis-period-btn"
-        )
-        .forEach(
-            button => {
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.period ===
-                    period
-                );
-
-            }
+        mostrarErroGraficos(
+            error.message
         );
 
 
-    loadNarrativePriceAnalysis();
+    } finally {
+
+        refreshButton.disabled =
+            false;
+
+    }
 
 }
 
 
-/* ============================================================
-   ATIVO
-   ============================================================ */
+/*
+============================================================
+PREENCHER MOEDAS
+============================================================
+*/
 
-function changePriceAsset(
-    asset
-) {
-
-    selectedAsset =
-        asset ||
-        "ALL";
-
-
-    loadNarrativePriceAnalysis();
-
-}
-
-
-/* ============================================================
-   ATUALIZAR
-   ============================================================ */
-
-function refreshNarrativePrice() {
-
-    loadNarrativePriceAnalysis();
-
-}
-
-
-/* ============================================================
-   RENDER GERAL
-   ============================================================ */
-
-function renderAnalysis() {
+function preencherMoedas() {
 
     if (!analysisData) {
+
         return;
+
     }
 
 
-    renderKPIs();
+    const lista =
+        analysisData.analisePorMoeda ||
+        [];
 
-    renderScatterChart();
 
-    renderTimelineChart();
+    const valorAtual =
+        coinSelector.value;
 
-    renderNarrativeTable();
 
-    renderAssetCards();
+    coinSelector.innerHTML = "";
 
-    renderInterpretation();
+
+    const optionTodos =
+        document.createElement("option");
+
+
+    optionTodos.value =
+        "all";
+
+
+    optionTodos.textContent =
+        "Visão geral do mercado";
+
+
+    coinSelector.appendChild(
+        optionTodos
+    );
+
+
+    lista.forEach(
+        item => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                item.coinId ||
+                item.symbol ||
+                "";
+
+
+            option.textContent =
+                item.name ||
+                item.symbol ||
+                item.coinId;
+
+
+            coinSelector.appendChild(
+                option
+            );
+
+        }
+    );
+
+
+    const existe =
+        Array.from(
+            coinSelector.options
+        ).some(
+            option =>
+                option.value ===
+                valorAtual
+        );
+
+
+    if (existe) {
+
+        coinSelector.value =
+            valorAtual;
+
+    }
 
 }
 
 
-/* ============================================================
-   KPIS
-   ============================================================ */
+/*
+============================================================
+OBTER ANÁLISE DA MOEDA SELECIONADA
+============================================================
+*/
 
-function renderKPIs() {
+function obterAnaliseSelecionada() {
 
-    const summary =
-        analysisData.summary ||
+    if (!analysisData) {
+
+        return null;
+
+    }
+
+
+    const selecionada =
+        coinSelector.value;
+
+
+    const lista =
+        analysisData.analisePorMoeda ||
+        [];
+
+
+    if (
+        selecionada === "all"
+    ) {
+
+        return null;
+
+    }
+
+
+    return (
+        lista.find(
+            item =>
+                item.coinId === selecionada ||
+                item.symbol === selecionada
+        ) ||
+        null
+    );
+
+}
+
+
+/*
+============================================================
+ATUALIZAR INTERFACE
+============================================================
+*/
+
+function atualizarInterface() {
+
+    const moeda =
+        obterAnaliseSelecionada();
+
+
+    if (moeda) {
+
+        atualizarMoeda(
+            moeda
+        );
+
+    } else {
+
+        atualizarVisaoGeral();
+
+    }
+
+
+    destruirGraficos();
+
+
+    criarGraficoPrecoSentimento(
+        moeda
+    );
+
+
+    criarGraficoDistribuicao(
+        moeda
+    );
+
+
+    criarGraficoNarrativaPreco(
+        moeda
+    );
+
+
+    criarGraficoNoticiasRetorno(
+        moeda
+    );
+
+
+    criarGraficoNarrativaVolatilidade(
+        moeda
+    );
+
+
+    criarGraficoDefasagem(
+        moeda
+    );
+
+
+    preencherTabelaNarrativas(
+        moeda
+    );
+
+
+    preencherDefasagens(
+        moeda
+    );
+
+
+    preencherInterpretacao(
+        moeda
+    );
+
+}
+
+
+/*
+============================================================
+ ATUALIZAR KPIs DA MOEDA
+============================================================
+*/
+
+function atualizarMoeda(
+    moeda
+) {
+
+    const resumo =
+        moeda.resumo ||
+        moeda.resumoPreco ||
         {};
 
 
-    setText(
-        "kpiAssets",
-        summary.assets ??
-        "—"
-    );
+    document.getElementById(
+        "currentPrice"
+    ).textContent =
+        "$ " +
+        formatPrice(
+            resumo.currentPrice ||
+            moeda.currentPrice ||
+            moeda.price
+        );
 
 
-    setText(
-        "kpiNews",
+    document.getElementById(
+        "priceVariation"
+    ).textContent =
+        formatPercent(
+            resumo.periodReturn ||
+            moeda.periodReturn
+        );
+
+
+    document.getElementById(
+        "newsCount"
+    ).textContent =
         formatNumber(
-            summary.news
-        )
-    );
+            moeda.newsCount ||
+            resumo.newsCount ||
+            0,
+            0
+        );
 
 
-    setText(
-        "kpiNarrative",
-        summary.dominantNarrative ||
-        "—"
-    );
+    document.getElementById(
+        "averageSentiment"
+    ).textContent =
+        formatNumber(
+            moeda.averageSentiment ||
+            resumo.averageSentiment ||
+            0
+        );
 
 
-    setText(
-        "kpiCorrelation",
-        formatCorrelation(
-            summary.overallCorrelation
-        )
-    );
+    document.getElementById(
+        "sentimentDescription"
+    ).textContent =
+        obterDescricaoSentimento(
+            moeda.averageSentiment ||
+            resumo.averageSentiment ||
+            0
+        );
 
 
-    setText(
-        "kpiCorrelationLabel",
-        summary.overallCorrelationLabel ||
-        "Pearson"
+    document.getElementById(
+        "volatilityValue"
+    ).textContent =
+        formatPercent(
+            moeda.volatility ||
+            resumo.volatility ||
+            0
+        );
+
+}
+
+
+/*
+============================================================
+VISÃO GERAL
+============================================================
+*/
+
+function atualizarVisaoGeral() {
+
+    const resumo =
+        analysisData.resumoPreco ||
+        {};
+
+
+    document.getElementById(
+        "currentPrice"
+    ).textContent =
+        "Mercado";
+
+
+    document.getElementById(
+        "priceVariation"
+    ).textContent =
+        "Selecione uma moeda";
+
+
+    document.getElementById(
+        "newsCount"
+    ).textContent =
+        formatNumber(
+            analysisData.totalNoticias ||
+            analysisData.totalPosts ||
+            0,
+            0
+        );
+
+
+    document.getElementById(
+        "averageSentiment"
+    ).textContent =
+        formatNumber(
+            analysisData.sentimentoMedio ||
+            resumo.averageSentiment ||
+            0
+        );
+
+
+    document.getElementById(
+        "sentimentDescription"
+    ).textContent =
+        obterDescricaoSentimento(
+            analysisData.sentimentoMedio ||
+            resumo.averageSentiment ||
+            0
+        );
+
+
+    document.getElementById(
+        "volatilityValue"
+    ).textContent =
+        "—";
+
+}
+
+
+/*
+============================================================
+DESCRIÇÃO DO SENTIMENTO
+============================================================
+*/
+
+function obterDescricaoSentimento(
+    value
+) {
+
+    const numero =
+        Number(value);
+
+
+    if (numero > 20) {
+
+        return "Predominantemente positivo";
+
+    }
+
+
+    if (numero < -20) {
+
+        return "Predominantemente negativo";
+
+    }
+
+
+    return "Comportamento próximo do neutro";
+
+}
+
+
+/*
+============================================================
+ OBTER SÉRIE DA MOEDA
+============================================================
+*/
+
+function obterSerie(
+    moeda
+) {
+
+    if (!moeda) {
+
+        return null;
+
+    }
+
+
+    return (
+        moeda.serie ||
+        moeda.series ||
+        moeda.serieTemporal ||
+        null
     );
 
 }
 
 
-/* ============================================================
-   SCATTER
-   ============================================================ */
+/*
+============================================================
+ GRÁFICO PREÇO × SENTIMENTO
+============================================================
+*/
 
-function renderScatterChart() {
+function criarGraficoPrecoSentimento(
+    moeda
+) {
 
     const canvas =
         document.getElementById(
-            "narrativePriceScatter"
+            "priceSentimentChart"
         );
 
 
-    if (
-        !canvas ||
-        typeof Chart ===
-        "undefined"
-    ) {
+    if (!moeda) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Selecione uma criptomoeda para visualizar a relação."
+        );
 
         return;
 
     }
 
 
-    if (scatterChart) {
+    const serie =
+        obterSerie(
+            moeda
+        );
 
-        scatterChart.destroy();
 
-        scatterChart =
-            null;
+    if (
+        !serie ||
+        !serie.length
+    ) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Não existem dados temporais suficientes."
+        );
+
+        return;
 
     }
 
 
-    const relations =
-        (
-            analysisData.correlations ||
-            []
-        )
-        .filter(
+    const labels =
+        serie.map(
             item =>
-                Number.isFinite(
-                    Number(
-                        item.averageNarrativeScore
-                    )
-                ) &&
-                Number.isFinite(
-                    Number(
-                        item.averageReturn
-                    )
+                formatarData(
+                    item.date ||
+                    item.data
                 )
         );
 
 
-    const points =
-        relations.map(
-            item => ({
-
-                x:
-                    Number(
-                        item.averageNarrativeScore
-                    ),
-
-                y:
-                    Number(
-                        item.averageReturn
-                    ),
-
-                asset:
-                    item.assetName,
-
-                symbol:
-                    item.symbol,
-
-                narrative:
-                    item.narrativeLabel,
-
-                correlation:
-                    item.correlation
-
-            })
+    const prices =
+        serie.map(
+            item =>
+                Number(
+                    item.price ||
+                    item.preco ||
+                    0
+                )
         );
 
 
-    scatterChart =
-        new Chart(
-            canvas.getContext(
-                "2d"
-            ),
-            {
+    const sentiment =
+        serie.map(
+            item =>
+                Number(
+                    item.sentiment ||
+                    item.sentimentScore ||
+                    0
+                )
+        );
 
-                type:
-                    "scatter",
+
+    charts.priceSentiment =
+        new Chart(
+            canvas,
+            {
+                type: "line",
 
                 data: {
+
+                    labels,
 
                     datasets: [
 
                         {
+                            label: "Preço",
 
-                            label:
-                                "Narrativas × Preço",
-
-                            data:
-                                points,
-
-                            pointRadius:
-                                7,
-
-                            pointHoverRadius:
-                                9,
-
-                            backgroundColor:
-                                "#43d9b0",
+                            data: prices,
 
                             borderColor:
-                                "#43d9b0",
+                                COLORS.green,
 
-                            borderWidth:
-                                1
+                            backgroundColor:
+                                "rgba(53,211,154,0.08)",
+
+                            borderWidth: 2,
+
+                            pointRadius: 0,
+
+                            tension: 0.25,
+
+                            yAxisID:
+                                "price"
+
+                        },
+
+                        {
+                            label: "Sentimento",
+
+                            data: sentiment,
+
+                            borderColor:
+                                COLORS.blue,
+
+                            borderWidth: 2,
+
+                            pointRadius: 0,
+
+                            tension: 0.25,
+
+                            yAxisID:
+                                "sentiment"
 
                         }
 
@@ -504,88 +917,132 @@ function renderScatterChart() {
 
                 },
 
+                options:
+                    criarOpcoesGraficoDualAxis()
+
+            }
+        );
+
+}
+
+
+/*
+============================================================
+GRÁFICO DE DISTRIBUIÇÃO
+============================================================
+*/
+
+function criarGraficoDistribuicao(
+    moeda
+) {
+
+    const canvas =
+        document.getElementById(
+            "sentimentDistributionChart"
+        );
+
+
+    if (!moeda) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Selecione uma moeda."
+        );
+
+        return;
+
+    }
+
+
+    const distribuicao =
+        moeda.distribuicaoSentimento ||
+        moeda.sentimentDistribution ||
+        {};
+
+
+    const positivo =
+        Number(
+            distribuicao.positive ||
+            distribuicao.positivo ||
+            0
+        );
+
+
+    const neutro =
+        Number(
+            distribuicao.neutral ||
+            distribuicao.neutro ||
+            0
+        );
+
+
+    const negativo =
+        Number(
+            distribuicao.negative ||
+            distribuicao.negativo ||
+            0
+        );
+
+
+    charts.distribution =
+        new Chart(
+            canvas,
+            {
+                type: "doughnut",
+
+                data: {
+
+                    labels: [
+                        "Positivo",
+                        "Neutro",
+                        "Negativo"
+                    ],
+
+                    datasets: [
+
+                        {
+
+                            data: [
+                                positivo,
+                                neutro,
+                                negativo
+                            ],
+
+                            backgroundColor: [
+                                COLORS.green,
+                                COLORS.neutral,
+                                COLORS.red
+                            ],
+
+                            borderWidth: 0
+
+                        }
+
+                    ]
+
+                },
 
                 options: {
 
-                    responsive:
-                        true,
+                    responsive: true,
 
-                    maintainAspectRatio:
-                        false,
+                    maintainAspectRatio: false,
 
+                    cutout: "68%",
 
                     plugins: {
 
                         legend: {
 
-                            display:
-                                false
+                            position: "bottom",
 
-                        },
+                            labels: {
 
+                                padding: 18,
 
-                        tooltip: {
+                                usePointStyle: true,
 
-                            callbacks: {
-
-                                label:
-                                    function(
-                                        context
-                                    ) {
-
-                                        const point =
-                                            context.raw;
-
-
-                                        return [
-
-                                            `${point.asset} (${point.symbol})`,
-
-                                            `Narrativa: ${point.narrative}`,
-
-                                            `Força média: ${formatSigned(point.x)}`,
-
-                                            `Retorno médio: ${formatPercent(point.y)}`,
-
-                                            `Correlação: ${formatCorrelation(point.correlation)}`
-
-                                        ];
-
-                                    }
-
-                            }
-
-                        }
-
-                    },
-
-
-                    scales: {
-
-                        x: {
-
-                            title: {
-
-                                display:
-                                    true,
-
-                                text:
-                                    "Intensidade narrativa média"
-
-                            }
-
-                        },
-
-
-                        y: {
-
-                            title: {
-
-                                display:
-                                    true,
-
-                                text:
-                                    "Retorno médio (%)"
+                                boxWidth: 8
 
                             }
 
@@ -601,78 +1058,440 @@ function renderScatterChart() {
 }
 
 
-/* ============================================================
-   TIMELINE
-   ============================================================ */
+/*
+============================================================
+NARRATIVA × PREÇO
+============================================================
+*/
 
-function renderTimelineChart() {
+function criarGraficoNarrativaPreco(
+    moeda
+) {
 
     const canvas =
         document.getElementById(
-            "narrativeTimelineChart"
+            "narrativePriceChart"
         );
 
 
-    if (
-        !canvas ||
-        typeof Chart ===
-        "undefined"
-    ) {
+    if (!moeda) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Selecione uma criptomoeda."
+        );
 
         return;
 
     }
 
 
-    if (timelineChart) {
+    const serie =
+        obterSerie(
+            moeda
+        );
 
-        timelineChart.destroy();
 
-        timelineChart =
-            null;
+    if (
+        !serie ||
+        !serie.length
+    ) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Dados narrativos insuficientes."
+        );
+
+        return;
 
     }
 
 
-    const timeline =
-        analysisData.timeline ||
-        [];
-
-
     const labels =
-        timeline.map(
+        serie.map(
             item =>
-                item.label
+                formatarData(
+                    item.date ||
+                    item.data
+                )
+        );
+
+
+    const prices =
+        serie.map(
+            item =>
+                Number(
+                    item.price ||
+                    item.preco ||
+                    0
+                )
         );
 
 
     const narrative =
-        timeline.map(
+        serie.map(
             item =>
                 Number(
-                    item.narrativeScore
-                ) || 0
+                    item.narrativeIntensity ||
+                    item.intensidadeNarrativa ||
+                    item.narrative ||
+                    0
+                )
+        );
+
+
+    charts.narrativePrice =
+        new Chart(
+            canvas,
+            {
+                type: "line",
+
+                data: {
+
+                    labels,
+
+                    datasets: [
+
+                        {
+
+                            label: "Preço",
+
+                            data: prices,
+
+                            borderColor:
+                                COLORS.green,
+
+                            borderWidth: 2,
+
+                            pointRadius: 0,
+
+                            tension: 0.25,
+
+                            yAxisID:
+                                "price"
+
+                        },
+
+                        {
+
+                            label:
+                                "Intensidade narrativa",
+
+                            data:
+                                narrative,
+
+                            borderColor:
+                                COLORS.purple,
+
+                            borderWidth: 2,
+
+                            pointRadius: 0,
+
+                            tension: 0.25,
+
+                            yAxisID:
+                                "narrative"
+
+                        }
+
+                    ]
+
+                },
+
+                options:
+                    criarOpcoesGraficoDualAxis()
+
+            }
+        );
+
+}
+
+
+/*
+============================================================
+NOTÍCIAS × RETORNO
+============================================================
+*/
+
+function criarGraficoNoticiasRetorno(
+    moeda
+) {
+
+    const canvas =
+        document.getElementById(
+            "newsReturnChart"
+        );
+
+
+    if (!moeda) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Selecione uma criptomoeda."
+        );
+
+        return;
+
+    }
+
+
+    const serie =
+        obterSerie(
+            moeda
+        );
+
+
+    if (
+        !serie ||
+        !serie.length
+    ) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Dados insuficientes."
+        );
+
+        return;
+
+    }
+
+
+    const labels =
+        serie.map(
+            item =>
+                formatarData(
+                    item.date ||
+                    item.data
+                )
+        );
+
+
+    const news =
+        serie.map(
+            item =>
+                Number(
+                    item.newsCount ||
+                    item.newsVolume ||
+                    0
+                )
         );
 
 
     const returns =
-        timeline.map(
+        serie.map(
             item =>
                 Number(
-                    item.marketReturn
-                ) || 0
+                    item.return ||
+                    item.retorno ||
+                    0
+                )
         );
 
 
-    timelineChart =
+    charts.newsReturn =
         new Chart(
-            canvas.getContext(
-                "2d"
-            ),
+            canvas,
             {
+                type: "bar",
 
-                type:
-                    "line",
+                data: {
+
+                    labels,
+
+                    datasets: [
+
+                        {
+
+                            type: "bar",
+
+                            label:
+                                "Volume de notícias",
+
+                            data:
+                                news,
+
+                            backgroundColor:
+                                "rgba(78,168,255,0.45)",
+
+                            borderWidth: 0,
+
+                            yAxisID:
+                                "news"
+
+                        },
+
+                        {
+
+                            type: "line",
+
+                            label:
+                                "Retorno (%)",
+
+                            data:
+                                returns,
+
+                            borderColor:
+                                COLORS.yellow,
+
+                            borderWidth: 2,
+
+                            pointRadius: 0,
+
+                            tension: 0.2,
+
+                            yAxisID:
+                                "return"
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    interaction: {
+
+                        mode: "index",
+
+                        intersect: false
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            grid: {
+                                display: false
+                            }
+
+                        },
+
+                        news: {
+
+                            position: "left",
+
+                            beginAtZero: true
+
+                        },
+
+                        return: {
+
+                            position: "right",
+
+                            grid: {
+                                drawOnChartArea: false
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+
+/*
+============================================================
+NARRATIVA × VOLATILIDADE
+============================================================
+*/
+
+function criarGraficoNarrativaVolatilidade(
+    moeda
+) {
+
+    const canvas =
+        document.getElementById(
+            "narrativeVolatilityChart"
+        );
+
+
+    if (!moeda) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Selecione uma criptomoeda."
+        );
+
+        return;
+
+    }
+
+
+    const serie =
+        obterSerie(
+            moeda
+        );
+
+
+    if (
+        !serie ||
+        !serie.length
+    ) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Dados insuficientes."
+        );
+
+        return;
+
+    }
+
+
+    const labels =
+        serie.map(
+            item =>
+                formatarData(
+                    item.date ||
+                    item.data
+                )
+        );
+
+
+    const narrative =
+        serie.map(
+            item =>
+                Number(
+                    item.narrativeIntensity ||
+                    item.intensidadeNarrativa ||
+                    0
+                )
+        );
+
+
+    const volatility =
+        serie.map(
+            item =>
+                Number(
+                    item.volatility ||
+                    item.volatilidade ||
+                    Math.abs(
+                        Number(
+                            item.return ||
+                            item.retorno ||
+                            0
+                        )
+                    )
+                )
+        );
+
+
+    charts.narrativeVolatility =
+        new Chart(
+            canvas,
+            {
+                type: "line",
 
                 data: {
 
@@ -683,39 +1502,44 @@ function renderTimelineChart() {
                         {
 
                             label:
-                                "Pressão narrativa",
+                                "Intensidade narrativa",
 
                             data:
                                 narrative,
 
-                            borderWidth:
-                                2,
+                            borderColor:
+                                COLORS.purple,
 
-                            pointRadius:
-                                2,
+                            borderWidth: 2,
 
-                            tension:
-                                0.3
+                            pointRadius: 0,
+
+                            tension: 0.25,
+
+                            yAxisID:
+                                "narrative"
 
                         },
-
 
                         {
 
                             label:
-                                "Retorno médio (%)",
+                                "Volatilidade",
 
                             data:
-                                returns,
+                                volatility,
 
-                            borderWidth:
-                                2,
+                            borderColor:
+                                COLORS.red,
 
-                            pointRadius:
-                                2,
+                            borderWidth: 2,
 
-                            tension:
-                                0.3
+                            pointRadius: 0,
+
+                            tension: 0.25,
+
+                            yAxisID:
+                                "volatility"
 
                         }
 
@@ -723,34 +1547,142 @@ function renderTimelineChart() {
 
                 },
 
+                options:
+                    criarOpcoesGraficoDualAxis()
+
+            }
+        );
+
+}
+
+
+/*
+============================================================
+DEFASAGEM
+============================================================
+*/
+
+function criarGraficoDefasagem(
+    moeda
+) {
+
+    const canvas =
+        document.getElementById(
+            "lagChart"
+        );
+
+
+    if (!moeda) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Selecione uma criptomoeda."
+        );
+
+        return;
+
+    }
+
+
+    const dados =
+        moeda.defasagens ||
+        moeda.defasagemNarrativa ||
+        analysisData.defasagemNarrativa ||
+        [];
+
+
+    if (!Array.isArray(dados)) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Dados de defasagem indisponíveis."
+        );
+
+        return;
+
+    }
+
+
+    const labels =
+        dados.map(
+            item =>
+                item.lag ||
+                item.defasagem ||
+                `${item.days || 0}d`
+        );
+
+
+    const values =
+        dados.map(
+            item =>
+                Number(
+                    item.correlation ||
+                    item.correlacao ||
+                    0
+                )
+        );
+
+
+    charts.lag =
+        new Chart(
+            canvas,
+            {
+                type: "bar",
+
+                data: {
+
+                    labels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Correlação",
+
+                            data:
+                                values,
+
+                            backgroundColor:
+                                values.map(
+                                    value =>
+                                        value >= 0
+                                            ? "rgba(53,211,154,0.65)"
+                                            : "rgba(255,114,114,0.65)"
+                                ),
+
+                            borderWidth: 0,
+
+                            borderRadius: 5
+
+                        }
+
+                    ]
+
+                },
 
                 options: {
 
-                    responsive:
-                        true,
+                    responsive: true,
 
-                    maintainAspectRatio:
-                        false,
-
-
-                    interaction: {
-
-                        mode:
-                            "index",
-
-                        intersect:
-                            false
-
-                    },
-
+                    maintainAspectRatio: false,
 
                     scales: {
 
                         y: {
 
-                            beginAtZero:
-                                false
+                            min: -1,
 
+                            max: 1
+
+                        }
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+                            display: false
                         }
 
                     }
@@ -763,35 +1695,34 @@ function renderTimelineChart() {
 }
 
 
-/* ============================================================
-   TABELA
-   ============================================================ */
+/*
+============================================================
+TABELA DE NARRATIVAS
+============================================================
+*/
 
-function renderNarrativeTable() {
+function preencherTabelaNarrativas(
+    moeda
+) {
 
-    const container =
+    const tbody =
         document.getElementById(
-            "narrativeTable"
+            "narrativeTableBody"
         );
 
 
-    if (!container) {
-        return;
-    }
+    tbody.innerHTML = "";
 
 
-    const narratives =
-        analysisData.narratives ||
-        [];
+    if (!moeda) {
 
-
-    if (!narratives.length) {
-
-        container.innerHTML = `
-            <div class="empty-analysis">
-                Não existem dados suficientes
-                para o período selecionado.
-            </div>
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    Selecione uma criptomoeda para visualizar
+                    as relações entre narrativas e retorno.
+                </td>
+            </tr>
         `;
 
         return;
@@ -799,142 +1730,144 @@ function renderNarrativeTable() {
     }
 
 
-    let html = `
-
-        <table class="price-analysis-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        NARRATIVA
-                    </th>
-
-                    <th>
-                        NOTÍCIAS
-                    </th>
-
-                    <th>
-                        CORRELAÇÃO
-                    </th>
-
-                    <th>
-                        DIA SEGUINTE
-                    </th>
-
-                    <th>
-                        RETORNO MÉDIO
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-    `;
+    const dados =
+        moeda.relacaoNarrativaPreco ||
+        moeda.narrativas ||
+        [];
 
 
-    narratives.forEach(
+    if (!Array.isArray(dados) || !dados.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    Não existem dados suficientes para esta análise.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    dados.forEach(
         item => {
 
-            html += `
+            const correlation =
+                Number(
+                    item.correlation ||
+                    item.correlacao ||
+                    0
+                );
 
-                <tr>
 
-                    <td>
-                        <strong>
-                            ${escapeHtml(
-                                item.narrativeLabel
-                            )}
-                        </strong>
-                    </td>
+            const tr =
+                document.createElement(
+                    "tr"
+                );
 
-                    <td>
-                        ${formatNumber(
-                            item.news
-                        )}
-                    </td>
 
-                    <td class="${getCorrelationClass(
-                        item.averageCorrelation
-                    )}">
+            let classe =
+                "correlation-neutral";
 
-                        ${formatCorrelation(
-                            item.averageCorrelation
-                        )}
 
-                    </td>
+            if (correlation > 0.1) {
 
-                    <td class="${getCorrelationClass(
-                        item.averageNextDayCorrelation
-                    )}">
+                classe =
+                    "correlation-positive";
 
-                        ${formatCorrelation(
-                            item.averageNextDayCorrelation
-                        )}
+            }
 
-                    </td>
 
-                    <td>
+            if (correlation < -0.1) {
 
-                        ${formatPercent(
-                            item.averageReturn
-                        )}
+                classe =
+                    "correlation-negative";
 
-                    </td>
+            }
 
-                </tr>
+
+            tr.innerHTML = `
+
+                <td>
+                    ${item.narrative ||
+                    item.nome ||
+                    "—"}
+                </td>
+
+                <td>
+                    ${formatNumber(
+                        item.newsCount ||
+                        item.quantidade ||
+                        0,
+                        0
+                    )}
+                </td>
+
+                <td>
+                    ${formatNumber(
+                        item.intensity ||
+                        item.intensidade ||
+                        0
+                    )}
+                </td>
+
+                <td class="${classe}">
+                    ${formatCorrelation(
+                        correlation
+                    )}
+                </td>
+
+                <td class="${classe}">
+                    ${obterDirecao(
+                        correlation
+                    )}
+                </td>
+
+                <td>
+                    ${item.interpretation ||
+                    item.interpretacao ||
+                    obterInterpretacaoCorrelacao(
+                        correlation
+                    )}
+                </td>
 
             `;
+
+
+            tbody.appendChild(
+                tr
+            );
 
         }
     );
 
-
-    html += `
-
-            </tbody>
-
-        </table>
-
-    `;
-
-
-    container.innerHTML =
-        html;
-
 }
 
 
-/* ============================================================
-   CARDS DOS ATIVOS
-   ============================================================ */
+/*
+============================================================
+DEFASAGENS — TEXTO
+============================================================
+*/
 
-function renderAssetCards() {
+function preencherDefasagens(
+    moeda
+) {
 
     const container =
         document.getElementById(
-            "assetAnalysisGrid"
+            "lagAnalysisContainer"
         );
 
 
-    if (!container) {
-        return;
-    }
-
-
-    const assets =
-        analysisData.assets ||
-        [];
-
-
-    if (!assets.length) {
+    if (!moeda) {
 
         container.innerHTML = `
             <div class="empty-analysis">
-                Não existem ativos disponíveis.
+                Selecione uma criptomoeda para visualizar
+                a análise de defasagem.
             </div>
         `;
 
@@ -943,151 +1876,113 @@ function renderAssetCards() {
     }
 
 
-    container.innerHTML =
-        assets.map(
-            asset => `
-
-                <article class="asset-analysis-card">
-
-                    <div class="asset-analysis-card-header">
-
-                        <div>
-
-                            <div class="asset-name">
-                                ${escapeHtml(
-                                    asset.name ||
-                                    "Ativo"
-                                )}
-                            </div>
-
-                            <div class="asset-symbol">
-                                ${escapeHtml(
-                                    asset.symbol ||
-                                    ""
-                                )}
-                            </div>
-
-                        </div>
-
-                    </div>
+    const dados =
+        moeda.defasagens ||
+        moeda.defasagemNarrativa ||
+        [];
 
 
-                    <div class="asset-stat">
+    if (
+        !Array.isArray(dados) ||
+        !dados.length
+    ) {
 
-                        <span>
-                            Notícias
-                        </span>
+        container.innerHTML = `
+            <div class="empty-analysis">
+                Não existem dados suficientes de defasagem.
+            </div>
+        `;
 
-                        <strong>
-                            ${formatNumber(
-                                asset.news
-                            )}
-                        </strong>
+        return;
 
-                    </div>
-
-
-                    <div class="asset-stat">
-
-                        <span>
-                            Narrativas
-                        </span>
-
-                        <strong>
-                            ${asset.narratives ?? "—"}
-                        </strong>
-
-                    </div>
+    }
 
 
-                    <div class="asset-stat">
-
-                        <span>
-                            Correlação média
-                        </span>
-
-                        <strong class="${getCorrelationClass(
-                            asset.averageCorrelation
-                        )}">
-
-                            ${formatCorrelation(
-                                asset.averageCorrelation
-                            )}
-
-                        </strong>
-
-                    </div>
+    container.innerHTML = "";
 
 
-                    <div class="asset-stat">
+    dados.forEach(
+        item => {
 
-                        <span>
-                            Variação do período
-                        </span>
+            const correlation =
+                Number(
+                    item.correlation ||
+                    item.correlacao ||
+                    0
+                );
 
-                        <strong>
 
-                            ${formatPercent(
-                                asset.priceChange
-                            )}
+            const lag =
+                item.lag ||
+                item.defasagem ||
+                `${item.days || 0} dias`;
 
-                        </strong>
 
-                    </div>
+            const element =
+                document.createElement(
+                    "div"
+                );
 
-                </article>
 
-            `
-        )
-        .join("");
+            element.className =
+                "lag-item";
+
+
+            element.innerHTML = `
+
+                <div class="lag-title">
+                    ${lag}
+                </div>
+
+                <div class="lag-value">
+                    ${formatCorrelation(
+                        correlation
+                    )}
+                </div>
+
+                <div class="lag-description">
+                    ${obterInterpretacaoCorrelacao(
+                        correlation
+                    )}
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                element
+            );
+
+        }
+    );
 
 }
 
 
-/* ============================================================
-   INTERPRETAÇÃO
-   ============================================================ */
+/*
+============================================================
+INTERPRETAÇÃO AUTOMÁTICA
+============================================================
+*/
 
-function renderInterpretation() {
+function preencherInterpretacao(
+    moeda
+) {
 
-    const container =
+    const elemento =
         document.getElementById(
             "analysisInterpretation"
         );
 
 
-    if (!container) {
-        return;
-    }
+    if (!moeda) {
 
+        elemento.innerHTML = `
 
-    const summary =
-        analysisData.summary ||
-        {};
-
-
-    const narratives =
-        analysisData.narratives ||
-        [];
-
-
-    if (!narratives.length) {
-
-        container.innerHTML = `
-
-            <div class="interpretation-card">
-
-                <strong>
-                    Dados insuficientes
-                </strong>
-
-                <p>
-                    O período selecionado ainda não possui
-                    observações suficientes para produzir
-                    uma leitura estatística consistente.
-                </p>
-
-            </div>
+            Selecione uma criptomoeda para realizar
+            uma análise individual do comportamento do
+            preço em relação às narrativas e ao sentimento
+            das notícias.
 
         `;
 
@@ -1096,280 +1991,318 @@ function renderInterpretation() {
     }
 
 
-    const dominant =
-        narratives[0];
+    const resumo =
+        moeda.resumoPreco ||
+        moeda.resumo ||
+        {};
 
 
     const correlation =
-        summary.overallCorrelation;
-
-
-    container.innerHTML = `
-
-        <div class="interpretation-card">
-
-            <strong>
-                Narrativa mais presente
-            </strong>
-
-            <p>
-
-                A narrativa com maior volume de notícias
-                no período foi
-                <strong>
-                    ${escapeHtml(
-                        dominant.narrativeLabel
-                    )}
-                </strong>.
-
-            </p>
-
-        </div>
-
-
-        <div class="interpretation-card">
-
-            <strong>
-                Relação observada
-            </strong>
-
-            <p>
-
-                A associação média calculada entre intensidade
-                narrativa e retorno dos ativos foi
-
-                <strong>
-                    ${formatCorrelation(
-                        correlation
-                    )}
-                </strong>.
-
-                ${escapeHtml(
-                    summary.overallCorrelationLabel ||
-                    "Não foi possível classificar."
-                )}
-
-            </p>
-
-        </div>
-
-
-        <div class="interpretation-card">
-
-            <strong>
-                Importante
-            </strong>
-
-            <p>
-
-                Uma correlação estatística não demonstra que
-                uma narrativa provocou determinado movimento
-                de preço. O indicador mostra apenas uma
-                associação observada nos dados analisados.
-
-            </p>
-
-        </div>
-
-    `;
-
-}
-
-
-/* ============================================================
-   FUNÇÕES AUXILIARES
-   ============================================================ */
-
-function setText(
-    id,
-    value
-) {
-
-    const element =
-        document.getElementById(
-            id
+        Number(
+            resumo.correlation ||
+            resumo.correlacao ||
+            moeda.correlation ||
+            0
         );
 
 
-    if (element) {
+    const sentiment =
+        Number(
+            moeda.averageSentiment ||
+            resumo.averageSentiment ||
+            0
+        );
 
-        element.textContent =
-            value;
+
+    const news =
+        Number(
+            moeda.newsCount ||
+            resumo.newsCount ||
+            0
+        );
+
+
+    let texto =
+        "";
+
+
+    if (correlation > 0.3) {
+
+        texto +=
+            "Foi observada uma associação positiva entre a intensidade das informações analisadas e o comportamento do preço no período. ";
+
+    } else if (correlation < -0.3) {
+
+        texto +=
+            "Foi observada uma associação negativa entre as variáveis analisadas no período. ";
+
+    } else {
+
+        texto +=
+            "A relação estatística observada entre as variáveis analisadas foi relativamente fraca no período. ";
 
     }
+
+
+    if (sentiment > 20) {
+
+        texto +=
+            "O sentimento agregado das notícias apresenta predominância positiva. ";
+
+    } else if (sentiment < -20) {
+
+        texto +=
+            "O sentimento agregado das notícias apresenta predominância negativa. ";
+
+    } else {
+
+        texto +=
+            "O sentimento agregado das notícias permanece próximo da região neutra. ";
+
+    }
+
+
+    texto +=
+        `A análise utiliza ${formatNumber(
+            news,
+            0
+        )} notícias associadas ao ativo. `;
+
+
+    texto +=
+        "Esses resultados representam associações estatísticas e temporais observadas nos dados e não permitem afirmar, isoladamente, que as narrativas causaram os movimentos de preço.";
+
+
+    elemento.innerHTML =
+        texto;
 
 }
 
 
-function formatNumber(
+/*
+============================================================
+INTERPRETAÇÃO DE CORRELAÇÃO
+============================================================
+*/
+
+function obterInterpretacaoCorrelacao(
     value
 ) {
 
-    const number =
+    const correlation =
         Number(value);
 
 
-    if (
-        !Number.isFinite(
-            number
-        )
-    ) {
+    const absoluto =
+        Math.abs(
+            correlation
+        );
 
-        return "—";
+
+    if (absoluto < 0.1) {
+
+        return "Associação muito fraca.";
 
     }
 
 
-    return new Intl.NumberFormat(
-        "pt-BR"
-    ).format(
-        number
-    );
+    if (absoluto < 0.3) {
+
+        return "Associação fraca.";
+
+    }
+
+
+    if (absoluto < 0.5) {
+
+        return "Associação moderada.";
+
+    }
+
+
+    if (absoluto < 0.7) {
+
+        return "Associação relativamente forte.";
+
+    }
+
+
+    return "Associação forte.";
 
 }
 
 
-function formatSigned(
+/*
+============================================================
+DIREÇÃO
+============================================================
+*/
+
+function obterDirecao(
     value
 ) {
 
-    const number =
+    const correlation =
         Number(value);
 
 
-    if (
-        !Number.isFinite(
-            number
-        )
-    ) {
+    if (correlation > 0.1) {
 
-        return "—";
+        return "Positiva";
 
     }
 
 
-    return (
-        number >= 0
-            ? "+"
-            : ""
-    ) +
-    number.toFixed(2);
+    if (correlation < -0.1) {
+
+        return "Negativa";
+
+    }
+
+
+    return "Próxima de neutra";
 
 }
 
 
-function formatPercent(
-    value
-) {
+/*
+============================================================
+OPÇÕES DE GRÁFICOS COM DOIS EIXOS
+============================================================
+*/
 
-    const number =
-        Number(value);
+function criarOpcoesGraficoDualAxis() {
 
+    return {
 
-    if (
-        !Number.isFinite(
-            number
-        )
-    ) {
+        responsive: true,
 
-        return "—";
+        maintainAspectRatio: false,
 
-    }
+        interaction: {
 
+            mode: "index",
 
-    return (
-        number >= 0
-            ? "+"
-            : ""
-    ) +
-    number.toFixed(2) +
-    "%";
+            intersect: false
+
+        },
+
+        plugins: {
+
+            legend: {
+
+                position: "top",
+
+                align: "end",
+
+                labels: {
+
+                    usePointStyle: true,
+
+                    boxWidth: 8,
+
+                    padding: 16
+
+                }
+
+            }
+
+        },
+
+        scales: {
+
+            x: {
+
+                grid: {
+
+                    display: false
+
+                }
+
+            },
+
+            price: {
+
+                position: "left",
+
+                beginAtZero: false,
+
+                grid: {
+
+                    drawOnChartArea: true
+
+                }
+
+            },
+
+            sentiment: {
+
+                position: "right",
+
+                min: -100,
+
+                max: 100,
+
+                grid: {
+
+                    drawOnChartArea: false
+
+                }
+
+            },
+
+            narrative: {
+
+                position: "right",
+
+                grid: {
+
+                    drawOnChartArea: false
+
+                }
+
+            },
+
+            volatility: {
+
+                position: "right",
+
+                grid: {
+
+                    drawOnChartArea: false
+
+                }
+
+            }
+
+        }
+
+    };
 
 }
 
 
-function formatCorrelation(
-    value
-) {
+/*
+============================================================
+FORMATAR DATA
+============================================================
+*/
 
-    const number =
-        Number(value);
-
-
-    if (
-        !Number.isFinite(
-            number
-        )
-    ) {
-
-        return "—";
-
-    }
-
-
-    return (
-        number >= 0
-            ? "+"
-            : ""
-    ) +
-    number.toFixed(2);
-
-}
-
-
-function getCorrelationClass(
-    value
-) {
-
-    const number =
-        Number(value);
-
-
-    if (
-        !Number.isFinite(
-            number
-        )
-    ) {
-
-        return "correlation-neutral";
-
-    }
-
-
-    if (
-        number > 0.2
-    ) {
-
-        return "correlation-positive";
-
-    }
-
-
-    if (
-        number < -0.2
-    ) {
-
-        return "correlation-negative";
-
-    }
-
-
-    return "correlation-neutral";
-
-}
-
-
-function formatDateTime(
+function formatarData(
     value
 ) {
 
     if (!value) {
-        return "—";
+
+        return "";
+
     }
 
 
     const date =
-        new Date(value);
+        new Date(
+            value
+        );
 
 
     if (
@@ -1378,56 +2311,196 @@ function formatDateTime(
         )
     ) {
 
-        return "—";
+        return String(
+            value
+        );
 
     }
 
 
-    return new Intl.DateTimeFormat(
+    return date.toLocaleDateString(
         "pt-BR",
         {
-
-            dateStyle:
-                "short",
-
-            timeStyle:
-                "medium"
-
+            day: "2-digit",
+            month: "2-digit"
         }
-    ).format(
-        date
     );
 
 }
 
 
-function escapeHtml(
-    value
+/*
+============================================================
+ MOSTRAR GRÁFICO VAZIO
+============================================================
+*/
+
+function mostrarGraficoVazio(
+    canvas,
+    message
 ) {
 
-    return String(
-        value ??
-        ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
+    if (!canvas) {
+
+        return;
+
+    }
+
+
+    const context =
+        canvas.getContext(
+            "2d"
         );
 
+
+    context.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    context.font =
+        "12px Arial";
+
+
+    context.fillStyle =
+        "#647b75";
+
+
+    context.textAlign =
+        "center";
+
+
+    context.textBaseline =
+        "middle";
+
+
+    context.fillText(
+        message,
+        canvas.width / 2,
+        canvas.height / 2
+    );
+
 }
+
+
+/*
+============================================================
+ERRO NOS GRÁFICOS
+============================================================
+*/
+
+function mostrarErroGraficos(
+    message
+) {
+
+    const elementos =
+        document.querySelectorAll(
+            "canvas"
+        );
+
+
+    elementos.forEach(
+        canvas => {
+
+            mostrarGraficoVazio(
+                canvas,
+                "Erro ao carregar os dados."
+            );
+
+        }
+    );
+
+
+    document.getElementById(
+        "analysisInterpretation"
+    ).textContent =
+        message;
+
+}
+
+
+/*
+============================================================
+DESTRUIR GRÁFICOS
+============================================================
+*/
+
+function destruirGraficos() {
+
+    Object.values(
+        charts
+    ).forEach(
+        chart => {
+
+            if (chart) {
+
+                chart.destroy();
+
+            }
+
+        }
+    );
+
+
+    charts = {};
+
+}
+
+
+/*
+============================================================
+EVENTOS
+============================================================
+*/
+
+coinSelector.addEventListener(
+    "change",
+    () => {
+
+        if (analysisData) {
+
+            atualizarInterface();
+
+        }
+
+    }
+);
+
+
+periodSelector.addEventListener(
+    "change",
+    () => {
+
+        if (analysisData) {
+
+            atualizarInterface();
+
+        }
+
+    }
+);
+
+
+refreshButton.addEventListener(
+    "click",
+    carregarAnalise
+);
+
+
+/*
+============================================================
+INICIALIZAÇÃO
+============================================================
+*/
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        carregarAnalise();
+
+    }
+);
