@@ -126,4 +126,46 @@ app.get(
 );
 
 
+// ============================================================
+// NARRATIVE PRICE
+// ============================================================
+
+app.get(
+    "/narrative-price",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../frontend/pages/narrative-price.html"
+            )
+        );
+
+    }
+);
+
+
+// ============================================================
+// NARRATIVE PRICE - ARQUIVO DIRETO
+// ============================================================
+
+app.get(
+    "/narrative-price.html",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../frontend/pages/narrative-price.html"
+            )
+        );
+
+    }
+);
+
+
+// ============================================================
+// EXPORT
+// ============================================================
+
 module.exports = app;
