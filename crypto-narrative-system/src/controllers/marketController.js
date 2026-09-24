@@ -1,22 +1,32 @@
 const marketService =
     require("../services/marketService");
 
-const Post =
-    require("../models/Post");
+
+const narrativePriceService =
+    require("../services/narrativePriceService");
 
 
-/* ============================================================
-   OBTER MOEDAS
-   ============================================================ */
+/*
+|--------------------------------------------------------------------------
+| OBTER MOEDAS
+|--------------------------------------------------------------------------
+*/
 
-async function getCoins(req, res) {
+async function getCoins(
+    req,
+    res
+) {
 
     try {
 
         const coins =
             await marketService.getAllCoins();
 
-        res.status(200).json(coins);
+
+        res.status(200).json(
+            coins
+        );
+
 
     } catch (error) {
 
@@ -25,8 +35,12 @@ async function getCoins(req, res) {
             error
         );
 
+
         res.status(500).json({
-            error: error.message
+
+            error:
+                error.message
+
         });
 
     }
@@ -34,52 +48,66 @@ async function getCoins(req, res) {
 }
 
 
-/* ============================================================
-   OBTER NOTÍCIAS
-   ============================================================ */
+/*
+|--------------------------------------------------------------------------
+| OBTER NOTÍCIAS
+|--------------------------------------------------------------------------
+*/
 
-async function getNews(req, res) {
+async function getNews(
+    req,
+    res
+) {
 
     try {
 
-        /*
-        |------------------------------------------------------------------
-        | NOTÍCIAS EXIBIDAS NO DASHBOARD
-        |------------------------------------------------------------------
-        |
-        | O MongoDB mantém todo o histórico de notícias.
-        |
-        | Porém, o Dashboard não precisa receber milhares de documentos
-        | em cada atualização.
-        |
-        | Aqui buscamos somente as 100 notícias mais recentes.
-        |
-        | Isso reduz:
-        |
-        | - processamento do MongoDB;
-        | - tamanho da resposta HTTP;
-        | - consumo de memória do Render;
-        | - tráfego entre servidor e navegador;
-        | - tempo de carregamento do Dashboard.
-        |
-        | O histórico completo continua preservado no banco e continua
-        | disponível para as análises estatísticas e científicas.
-        |
-        */
+        const requestedLimit =
+            Number(
+                req.query.limit
+            );
+
+
+        const limit =
+            Number.isFinite(
+                requestedLimit
+            )
+                ? Math.min(
+                    100,
+                    Math.max(
+                        1,
+                        Math.floor(
+                            requestedLimit
+                        )
+                    )
+                )
+                : 30;
+
+
+        const Post =
+            require("../models/Post");
+
 
         const news =
-            await Post
-                .find()
+            await Post.find()
                 .sort({
-                    publishedAt: -1
+
+                    publishedAt:
+                        -1,
+
+                    createdAt:
+                        -1
+
                 })
-                .limit(100)
+                .limit(
+                    limit
+                )
                 .lean();
 
 
         res.status(200).json(
             news
         );
+
 
     } catch (error) {
 
@@ -88,9 +116,12 @@ async function getNews(req, res) {
             error
         );
 
+
         res.status(500).json({
+
             error:
                 error.message
+
         });
 
     }
@@ -98,18 +129,79 @@ async function getNews(req, res) {
 }
 
 
-/* ============================================================
-   OBTER HISTÓRICO DA MOEDA
-   ============================================================ */
+/*
+|--------------------------------------------------------------------------
+| INTELIGÊNCIA NARRATIVA
+|--------------------------------------------------------------------------
+*/
 
-async function getCoinHistory(req, res) {
+async function getNarratives(
+    req,
+    res
+) {
 
     try {
 
-        const { coinId } =
+        const period =
+            String(
+                req.query.period ||
+                "30d"
+            );
+
+
+        const analysis =
+            await marketService.getNarrativeAnalysis(
+                period
+            );
+
+
+        res.status(200).json(
+            analysis
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "ERRO AO GERAR INTELIGÊNCIA NARRATIVA:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            error:
+                error.message
+
+        });
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| HISTÓRICO DA MOEDA
+|--------------------------------------------------------------------------
+*/
+
+async function getCoinHistory(
+    req,
+    res
+) {
+
+    try {
+
+        const {
+            coinId
+        } =
             req.params;
 
-        const { period = "day" } =
+
+        const {
+            period = "day"
+        } =
             req.query;
 
 
@@ -157,14 +249,94 @@ async function getCoinHistory(req, res) {
 }
 
 
-/* ============================================================
-   EXPORTAÇÕES
-   ============================================================ */
+/*
+|--------------------------------------------------------------------------
+| NARRATIVA × PREÇO
+|--------------------------------------------------------------------------
+|
+| Exemplos:
+|
+| /market/narrative-price
+| /market/narrative-price?period=7d
+| /market/narrative-price?period=30d
+| /market/narrative-price?period=60d
+|
+| /market/narrative-price?period=30d&asset=bitcoin
+| /market/narrative-price?period=30d&asset=ethereum
+|
+|--------------------------------------------------------------------------
+*/
+
+async function getNarrativePrice(
+    req,
+    res
+) {
+
+    try {
+
+        const period =
+            String(
+                req.query.period ||
+                "30d"
+            );
+
+
+        const asset =
+            String(
+                req.query.asset ||
+                "ALL"
+            );
+
+
+        const analysis =
+            await narrativePriceService
+                .getNarrativePriceAnalysis(
+                    period,
+                    asset
+                );
+
+
+        res.status(200).json(
+            analysis
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "ERRO AO GERAR ANÁLISE NARRATIVA × PREÇO:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            error:
+                error.message
+
+        });
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| EXPORTS
+|--------------------------------------------------------------------------
+*/
 
 module.exports = {
 
     getCoins,
+
     getNews,
-    getCoinHistory
+
+    getNarratives,
+
+    getCoinHistory,
+
+    getNarrativePrice
 
 };
