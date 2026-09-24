@@ -38,6 +38,9 @@ const periodSelector =
 const refreshButton =
     document.getElementById("refreshAnalysis");
 
+const executeAnalysisButton =
+    document.getElementById("executeAnalysis");
+
 const analysisStatus =
     document.getElementById("analysisStatus");
 
@@ -296,9 +299,74 @@ async function carregarAnalise() {
         }
 
 
+        if (executeAnalysisButton) {
+
+            executeAnalysisButton.disabled =
+                true;
+
+        }
+
+
+        /*
+        ========================================================
+        PERÍODO SELECIONADO
+        ========================================================
+        */
+
+        const periodo =
+            periodSelector
+                ? periodSelector.value
+                : "year";
+
+
+        /*
+        ========================================================
+        MOEDA SELECIONADA
+        ========================================================
+        */
+
+        const moedaSelecionada =
+            coinSelector
+                ? coinSelector.value
+                : "all";
+
+
+        /*
+        ========================================================
+        MONTA A URL DA API
+        ========================================================
+        */
+
+        const params =
+            new URLSearchParams();
+
+
+        params.set(
+            "period",
+            periodo
+        );
+
+
+        if (
+            moedaSelecionada &&
+            moedaSelecionada !== "all"
+        ) {
+
+            params.set(
+                "coin",
+                moedaSelecionada
+            );
+
+        }
+
+
+        const url =
+            `${API_URL}?${params.toString()}`;
+
+
         const response =
             await fetch(
-                API_URL,
+                url,
                 {
                     method: "GET",
                     cache: "no-store"
@@ -338,7 +406,41 @@ async function carregarAnalise() {
         preencherMoedas();
 
 
+        /*
+        ========================================================
+        RESTAURA A MOEDA SELECIONADA
+        ========================================================
+        */
+
+        if (
+            moedaSelecionada &&
+            moedaSelecionada !== "all"
+        ) {
+
+            const existe =
+                Array.from(
+                    coinSelector.options
+                ).some(
+                    option =>
+                        option.value ===
+                        moedaSelecionada
+                );
+
+
+            if (existe) {
+
+                coinSelector.value =
+                    moedaSelecionada;
+
+            }
+
+        }
+
+
         atualizarInterface();
+
+
+        atualizarInformacoesHero();
 
 
         setStatus(
@@ -370,6 +472,14 @@ async function carregarAnalise() {
         if (refreshButton) {
 
             refreshButton.disabled =
+                false;
+
+        }
+
+
+        if (executeAnalysisButton) {
+
+            executeAnalysisButton.disabled =
                 false;
 
         }
@@ -594,6 +704,137 @@ function atualizarInterface() {
 
 /*
 ============================================================
+ATUALIZAR INFORMAÇÕES DO HERO
+============================================================
+*/
+
+function atualizarInformacoesHero() {
+
+    if (!analysisData) {
+
+        return;
+
+    }
+
+
+    const moeda =
+        obterAnaliseSelecionada();
+
+
+    const heroCoin =
+        document.getElementById(
+            "heroCoin"
+        );
+
+
+    const heroPeriod =
+        document.getElementById(
+            "heroPeriod"
+        );
+
+
+    const heroNewsCount =
+        document.getElementById(
+            "heroNewsCount"
+        );
+
+
+    if (heroCoin) {
+
+        if (moeda) {
+
+            heroCoin.textContent =
+                moeda.name ||
+                moeda.symbol ||
+                moeda.coinId ||
+                "Criptomoeda";
+
+        } else {
+
+            heroCoin.textContent =
+                "Mercado completo";
+
+        }
+
+    }
+
+
+    if (heroPeriod) {
+
+        heroPeriod.textContent =
+            obterNomePeriodo(
+                periodSelector
+                    ? periodSelector.value
+                    : "year"
+            );
+
+    }
+
+
+    if (heroNewsCount) {
+
+        const total =
+            moeda
+                ? (
+                    moeda.newsCount ??
+                    moeda.resumo?.newsCount ??
+                    0
+                )
+                : (
+                    analysisData.totalNoticias ??
+                    analysisData.totalPosts ??
+                    0
+                );
+
+
+        heroNewsCount.textContent =
+            formatNumber(
+                total,
+                0
+            );
+
+    }
+
+}
+
+
+/*
+============================================================
+NOME DO PERÍODO
+============================================================
+*/
+
+function obterNomePeriodo(
+    periodo
+) {
+
+    const periodos = {
+
+        day:
+            "Último dia",
+
+        week:
+            "Última semana",
+
+        month:
+            "Último mês",
+
+        year:
+            "Último ano"
+
+    };
+
+
+    return (
+        periodos[periodo] ||
+        "Último ano"
+    );
+
+}
+
+
+/*
+============================================================
 ATUALIZAR KPIs DA MOEDA
 ============================================================
 */
@@ -637,54 +878,102 @@ function atualizarMoeda(
         0;
 
 
-    document.getElementById(
-        "currentPrice"
-    ).textContent =
-        "$ " +
-        formatPrice(
-            currentPrice
+    const currentPriceElement =
+        document.getElementById(
+            "currentPrice"
         );
 
 
-    document.getElementById(
-        "priceVariation"
-    ).textContent =
-        formatPercent(
-            periodReturn
+    const priceVariationElement =
+        document.getElementById(
+            "priceVariation"
         );
 
 
-    document.getElementById(
-        "newsCount"
-    ).textContent =
-        formatNumber(
-            newsCount,
-            0
+    const newsCountElement =
+        document.getElementById(
+            "newsCount"
         );
 
 
-    document.getElementById(
-        "averageSentiment"
-    ).textContent =
-        formatNumber(
-            averageSentiment
+    const averageSentimentElement =
+        document.getElementById(
+            "averageSentiment"
         );
 
 
-    document.getElementById(
-        "sentimentDescription"
-    ).textContent =
-        obterDescricaoSentimento(
-            averageSentiment
+    const sentimentDescriptionElement =
+        document.getElementById(
+            "sentimentDescription"
         );
 
 
-    document.getElementById(
-        "volatilityValue"
-    ).textContent =
-        formatPercent(
-            volatility
+    const volatilityElement =
+        document.getElementById(
+            "volatilityValue"
         );
+
+
+    if (currentPriceElement) {
+
+        currentPriceElement.textContent =
+            "$ " +
+            formatPrice(
+                currentPrice
+            );
+
+    }
+
+
+    if (priceVariationElement) {
+
+        priceVariationElement.textContent =
+            formatPercent(
+                periodReturn
+            );
+
+    }
+
+
+    if (newsCountElement) {
+
+        newsCountElement.textContent =
+            formatNumber(
+                newsCount,
+                0
+            );
+
+    }
+
+
+    if (averageSentimentElement) {
+
+        averageSentimentElement.textContent =
+            formatNumber(
+                averageSentiment
+            );
+
+    }
+
+
+    if (sentimentDescriptionElement) {
+
+        sentimentDescriptionElement.textContent =
+            obterDescricaoSentimento(
+                averageSentiment
+            );
+
+    }
+
+
+    if (volatilityElement) {
+
+        volatilityElement.textContent =
+            formatPercent(
+                volatility
+            );
+
+    }
 
 }
 
@@ -1537,7 +1826,7 @@ function criarGraficoNarrativaVolatilidade(
                     item.intensidadeNarrativa ??
                     0
                 )
-        );
+            );
 
 
     const volatility =
@@ -1554,7 +1843,7 @@ function criarGraficoNarrativaVolatilidade(
                         )
                     )
                 )
-        );
+            );
 
 
     charts.narrativeVolatility =
@@ -2558,8 +2847,68 @@ function destruirGraficos() {
 
 /*
 ============================================================
+EXECUTAR ANÁLISE
+============================================================
+*/
+
+function executarAnaliseSelecionada() {
+
+    if (!coinSelector || !periodSelector) {
+
+        return;
+
+    }
+
+
+    const moeda =
+        coinSelector.value;
+
+
+    const periodo =
+        periodSelector.value;
+
+
+    console.log(
+        "Executando análise:",
+        {
+            moeda,
+            periodo
+        }
+    );
+
+
+    carregarAnalise();
+
+}
+
+
+/*
+============================================================
 EVENTOS
 ============================================================
+*/
+
+
+/*
+------------------------------------------------------------
+BOTÃO EXECUTAR ANÁLISE
+------------------------------------------------------------
+*/
+
+if (executeAnalysisButton) {
+
+    executeAnalysisButton.addEventListener(
+        "click",
+        executarAnaliseSelecionada
+    );
+
+}
+
+
+/*
+------------------------------------------------------------
+SELEÇÃO DA MOEDA
+------------------------------------------------------------
 */
 
 if (coinSelector) {
@@ -2568,17 +2917,28 @@ if (coinSelector) {
         "change",
         () => {
 
-            if (analysisData) {
+            /*
+            Não executamos automaticamente.
 
-                atualizarInterface();
+            O usuário escolhe a moeda e depois
+            confirma pelo botão "Executar análise".
+            */
 
-            }
+            setStatus(
+                "Moeda selecionada. Clique em Executar análise."
+            );
 
         }
     );
 
 }
 
+
+/*
+------------------------------------------------------------
+SELEÇÃO DO PERÍODO
+------------------------------------------------------------
+*/
 
 if (periodSelector) {
 
@@ -2586,17 +2946,28 @@ if (periodSelector) {
         "change",
         () => {
 
-            if (analysisData) {
+            /*
+            Não executamos automaticamente.
 
-                atualizarInterface();
+            O usuário escolhe o período e depois
+            confirma pelo botão "Executar análise".
+            */
 
-            }
+            setStatus(
+                "Período selecionado. Clique em Executar análise."
+            );
 
         }
     );
 
 }
 
+
+/*
+------------------------------------------------------------
+BOTÃO DE ATUALIZAÇÃO DO TOPO
+------------------------------------------------------------
+*/
 
 if (refreshButton) {
 
