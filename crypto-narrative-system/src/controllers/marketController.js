@@ -44,14 +44,26 @@ async function getNews(req, res) {
 
         /*
         |------------------------------------------------------------------
-        | BUSCAR TODO O HISTÓRICO DE NOTÍCIAS
+        | NOTÍCIAS EXIBIDAS NO DASHBOARD
         |------------------------------------------------------------------
         |
-        | Não utilizamos .limit(10) aqui.
+        | O MongoDB mantém todo o histórico de notícias.
         |
-        | O MongoDB possui o histórico completo das notícias coletadas.
-        | Portanto, a Inteligência Narrativa receberá todas as notícias
-        | armazenadas para realizar a análise temporal e estatística.
+        | Porém, o Dashboard não precisa receber milhares de documentos
+        | em cada atualização.
+        |
+        | Aqui buscamos somente as 100 notícias mais recentes.
+        |
+        | Isso reduz:
+        |
+        | - processamento do MongoDB;
+        | - tamanho da resposta HTTP;
+        | - consumo de memória do Render;
+        | - tráfego entre servidor e navegador;
+        | - tempo de carregamento do Dashboard.
+        |
+        | O histórico completo continua preservado no banco e continua
+        | disponível para as análises estatísticas e científicas.
         |
         */
 
@@ -60,9 +72,14 @@ async function getNews(req, res) {
                 .find()
                 .sort({
                     publishedAt: -1
-                });
+                })
+                .limit(100)
+                .lean();
 
-        res.status(200).json(news);
+
+        res.status(200).json(
+            news
+        );
 
     } catch (error) {
 
@@ -72,7 +89,8 @@ async function getNews(req, res) {
         );
 
         res.status(500).json({
-            error: error.message
+            error:
+                error.message
         });
 
     }
