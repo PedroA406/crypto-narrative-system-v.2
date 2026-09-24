@@ -1064,7 +1064,7 @@ async function updateMarketSentiment() {
         );
 
         console.log(
-            "=================================";
+            "=================================");
 
 
     } catch (error) {
