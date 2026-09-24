@@ -11,36 +11,33 @@
     >
 
     <title>
-        Crypto Narrative System - Análise Narrativa x Preço
+        Crypto Narrative System - Narrative × Price
     </title>
 
-    <!--
-    ============================================================
-    CSS PRINCIPAL DO SISTEMA
-    ============================================================
-    -->
+
+    <!-- ============================================================
+         CSS PRINCIPAL
+         ============================================================ -->
 
     <link
         rel="stylesheet"
         href="../assets/css/dashboard.css"
     >
 
-    <!--
-    ============================================================
-    CSS ESPECÍFICO DESTA PÁGINA
-    ============================================================
-    -->
+
+    <!-- ============================================================
+         CSS DA PÁGINA
+         ============================================================ -->
 
     <link
         rel="stylesheet"
         href="../assets/css/narrative-price.css"
     >
 
-    <!--
-    ============================================================
-    CHART.JS
-    ============================================================
-    -->
+
+    <!-- ============================================================
+         CHART.JS
+         ============================================================ -->
 
     <script
         src="https://cdn.jsdelivr.net/npm/chart.js"
@@ -51,802 +48,1006 @@
 
 <body>
 
-    <!--
-    ============================================================
-    CABEÇALHO
-    ============================================================
-    -->
 
-    <header class="analysis-header">
+    <!-- ============================================================
+         LAYOUT PRINCIPAL
+         ============================================================ -->
 
-        <div class="analysis-header-left">
+    <div class="dashboard-layout">
 
-            <div class="analysis-brand">
 
-                <span class="analysis-brand-title">
-                    Crypto Narrative System
-                </span>
+        <!-- ========================================================
+             MENU LATERAL
+             ======================================================== -->
 
-                <span class="analysis-brand-subtitle">
-                    Plataforma Institucional de Inteligência Cripto
+        <aside class="sidebar">
+
+
+            <!-- ====================================================
+                 MARCA
+                 ==================================================== -->
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+                    ₿
+                </div>
+
+                <div class="brand-text">
+
+                    <span class="brand-title">
+                        Crypto Narrative
+                    </span>
+
+                    <span class="brand-subtitle">
+                        System
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- ====================================================
+                 STATUS DO MERCADO
+                 ==================================================== -->
+
+            <div class="sidebar-market-status">
+
+                <span class="status-dot"></span>
+
+                <span>
+                    MERCADO AO VIVO
                 </span>
 
             </div>
+
+
+            <!-- ====================================================
+                 NAVEGAÇÃO
+                 ==================================================== -->
+
+            <nav class="sidebar-nav">
+
+
+                <!-- =================================================
+                     DASHBOARD
+                     ================================================= -->
+
+                <a
+                    href="/"
+                    class="nav-item"
+                >
+
+                    <span class="nav-icon">
+                        ◈
+                    </span>
+
+                    <span class="nav-text">
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                     INTELIGÊNCIA NARRATIVA
+                     ================================================= -->
+
+                <a
+                    href="/narrative-analysis"
+                    class="nav-item"
+                >
+
+                    <span class="nav-icon">
+                        ◉
+                    </span>
+
+                    <span class="nav-text">
+                        Inteligência Narrativa
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                     NARRATIVA × PREÇO
+                     ================================================= -->
+
+                <a
+                    href="/pages/narrative-price.html"
+                    class="nav-item active"
+                >
+
+                    <span class="nav-icon">
+                        ↗
+                    </span>
+
+                    <span class="nav-text">
+                        Narrative × Price
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                     SEPARADOR
+                     ================================================= -->
+
+                <div class="nav-section-title">
+                    ANÁLISES
+                </div>
+
+
+                <!-- =================================================
+                     SENTIMENTO
+                     ================================================= -->
+
+                <a
+                    href="/narrative-analysis"
+                    class="nav-item"
+                >
+
+                    <span class="nav-icon">
+                        ◒
+                    </span>
+
+                    <span class="nav-text">
+                        Sentimento
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                     NARRATIVAS
+                     ================================================= -->
+
+                <a
+                    href="/narrative-analysis"
+                    class="nav-item"
+                >
+
+                    <span class="nav-icon">
+                        ◎
+                    </span>
+
+                    <span class="nav-text">
+                        Narrativas
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                     MERCADO
+                     ================================================= -->
+
+                <a
+                    href="/"
+                    class="nav-item"
+                >
+
+                    <span class="nav-icon">
+                        ◌
+                    </span>
+
+                    <span class="nav-text">
+                        Mercado
+                    </span>
+
+                </a>
+
+            </nav>
+
+
+            <!-- ====================================================
+                 RODAPÉ DO MENU
+                 ==================================================== -->
+
+            <div class="sidebar-footer">
+
+                <div class="sidebar-footer-line"></div>
+
+                <span>
+                    Crypto Intelligence Platform
+                </span>
+
+                <small>
+                    Dados de mercado e notícias
+                </small>
+
+            </div>
+
+
+        </aside>
+
+
+        <!-- ========================================================
+             ÁREA PRINCIPAL
+             ======================================================== -->
+
+        <div class="dashboard-main">
+
+
+            <!-- ====================================================
+                 CABEÇALHO
+                 ==================================================== -->
+
+            <header class="topbar">
+
+
+                <div class="topbar-left">
+
+                    <div>
+
+                        <h1>
+                            Narrative × Price
+                        </h1>
+
+                        <span>
+                            Relação entre narrativas,
+                            sentimento e comportamento de mercado
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="topbar-right">
+
+                    <div class="topbar-market-status">
+
+                        <span class="status-dot"></span>
+
+                        <span>
+                            MERCADO AO VIVO
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+            </header>
+
+
+            <!-- ====================================================
+                 CONTEÚDO
+                 ==================================================== -->
+
+            <main class="analysis-container">
+
+
+                <!-- =================================================
+                     INTRODUÇÃO
+                     ================================================= -->
+
+                <section class="analysis-introduction">
+
+                    <div>
+
+                        <span class="section-eyebrow">
+                            LABORATÓRIO DE ANÁLISE
+                        </span>
+
+                        <h2>
+                            Narrativas × Preço
+                        </h2>
+
+                        <p>
+
+                            Análise das relações entre comportamento
+                            de preços, sentimento das notícias,
+                            intensidade narrativa, volume informacional
+                            e volatilidade dos ativos.
+
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     CONTROLES
+                     ================================================= -->
+
+                <section class="analysis-controls">
+
+
+                    <div class="control-group">
+
+                        <label for="coinSelector">
+                            Criptomoeda
+                        </label>
+
+                        <select id="coinSelector">
+
+                            <option value="all">
+                                Visão geral do mercado
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="control-group">
+
+                        <label for="periodSelector">
+                            Período
+                        </label>
+
+                        <select id="periodSelector">
+
+                            <option value="year">
+                                Último ano
+                            </option>
+
+                            <option value="month">
+                                Últimos 30 dias
+                            </option>
+
+                            <option value="week">
+                                Últimos 7 dias
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <button
+                        id="refreshAnalysis"
+                        class="analysis-refresh-button"
+                    >
+
+                        ↻
+
+                        Atualizar análise
+
+                    </button>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     STATUS
+                     ================================================= -->
+
+                <div
+                    id="analysisStatus"
+                    class="analysis-status"
+                >
+
+                    Preparando análise...
+
+                </div>
+
+
+                <!-- =================================================
+                     KPIs
+                     ================================================= -->
+
+                <section class="kpi-grid">
+
+
+                    <article class="kpi-card">
+
+                        <div class="kpi-label">
+                            PREÇO ATUAL
+                        </div>
+
+                        <div
+                            id="currentPrice"
+                            class="kpi-value"
+                        >
+                            —
+                        </div>
+
+                        <div
+                            id="priceVariation"
+                            class="kpi-description"
+                        >
+                            Aguardando dados
+                        </div>
+
+                    </article>
+
+
+                    <article class="kpi-card">
+
+                        <div class="kpi-label">
+                            NOTÍCIAS
+                        </div>
+
+                        <div
+                            id="newsCount"
+                            class="kpi-value"
+                        >
+                            —
+                        </div>
+
+                        <div class="kpi-description">
+                            Notícias utilizadas na análise
+                        </div>
+
+                    </article>
+
+
+                    <article class="kpi-card">
+
+                        <div class="kpi-label">
+                            SENTIMENTO MÉDIO
+                        </div>
+
+                        <div
+                            id="averageSentiment"
+                            class="kpi-value"
+                        >
+                            —
+                        </div>
+
+                        <div
+                            id="sentimentDescription"
+                            class="kpi-description"
+                        >
+                            —
+                        </div>
+
+                    </article>
+
+
+                    <article class="kpi-card">
+
+                        <div class="kpi-label">
+                            VOLATILIDADE
+                        </div>
+
+                        <div
+                            id="volatilityValue"
+                            class="kpi-value"
+                        >
+                            —
+                        </div>
+
+                        <div class="kpi-description">
+                            Variação observada no período
+                        </div>
+
+                    </article>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     RESUMO DA ANÁLISE
+                     ================================================= -->
+
+                <section class="analysis-summary-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                INTERPRETAÇÃO
+                            </span>
+
+                            <h2>
+                                Leitura dos resultados
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="analysisInterpretation"
+                        class="analysis-interpretation"
+                    >
+
+                        A análise será apresentada após
+                        o carregamento dos dados.
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     GRÁFICOS
+                     ================================================= -->
+
+                <section class="charts-grid">
+
+
+                    <!-- =============================================
+                         PREÇO × SENTIMENTO
+                         ============================================= -->
+
+                    <article class="chart-card chart-card-large">
+
+                        <div class="chart-header">
+
+                            <div>
+
+                                <span class="card-eyebrow">
+                                    RELAÇÃO TEMPORAL
+                                </span>
+
+                                <h2>
+                                    Preço × Sentimento
+                                </h2>
+
+                            </div>
+
+                            <span class="chart-info">
+                                Associação temporal
+                            </span>
+
+                        </div>
+
+
+                        <p class="chart-description">
+
+                            Compara a evolução do preço do ativo
+                            com o sentimento médio identificado
+                            nas notícias.
+
+                        </p>
+
+
+                        <div class="chart-container">
+
+                            <canvas
+                                id="priceSentimentChart"
+                            ></canvas>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- =============================================
+                         DISTRIBUIÇÃO DE SENTIMENTO
+                         ============================================= -->
+
+                    <article class="chart-card">
+
+                        <div class="chart-header">
+
+                            <div>
+
+                                <span class="card-eyebrow">
+                                    SENTIMENTO
+                                </span>
+
+                                <h2>
+                                    Distribuição
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <p class="chart-description">
+
+                            Distribuição das notícias entre sentimento
+                            positivo, neutro e negativo.
+
+                        </p>
+
+
+                        <div class="chart-container chart-container-small">
+
+                            <canvas
+                                id="sentimentDistributionChart"
+                            ></canvas>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- =============================================
+                         NARRATIVA × PREÇO
+                         ============================================= -->
+
+                    <article class="chart-card chart-card-large">
+
+                        <div class="chart-header">
+
+                            <div>
+
+                                <span class="card-eyebrow">
+                                    NARRATIVAS
+                                </span>
+
+                                <h2>
+                                    Narrativa × Preço
+                                </h2>
+
+                            </div>
+
+                            <span class="chart-info">
+                                Intensidade narrativa
+                            </span>
+
+                        </div>
+
+
+                        <p class="chart-description">
+
+                            Mostra como a intensidade das principais
+                            narrativas se distribui ao longo da
+                            evolução do ativo.
+
+                        </p>
+
+
+                        <div class="chart-container">
+
+                            <canvas
+                                id="narrativePriceChart"
+                            ></canvas>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- =============================================
+                         NOTÍCIAS × RETORNO
+                         ============================================= -->
+
+                    <article class="chart-card">
+
+                        <div class="chart-header">
+
+                            <div>
+
+                                <span class="card-eyebrow">
+                                    ATIVIDADE INFORMACIONAL
+                                </span>
+
+                                <h2>
+                                    Notícias × Retorno
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <p class="chart-description">
+
+                            Compara o volume diário de notícias
+                            com a variação observada no preço.
+
+                        </p>
+
+
+                        <div class="chart-container chart-container-small">
+
+                            <canvas
+                                id="newsReturnChart"
+                            ></canvas>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- =============================================
+                         NARRATIVA × VOLATILIDADE
+                         ============================================= -->
+
+                    <article class="chart-card chart-card-large">
+
+                        <div class="chart-header">
+
+                            <div>
+
+                                <span class="card-eyebrow">
+                                    RISCO
+                                </span>
+
+                                <h2>
+                                    Narrativa × Volatilidade
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <p class="chart-description">
+
+                            Observa se períodos de maior intensidade
+                            narrativa também apresentam maior
+                            variação de preço.
+
+                        </p>
+
+
+                        <div class="chart-container">
+
+                            <canvas
+                                id="narrativeVolatilityChart"
+                            ></canvas>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- =============================================
+                         DEFASAGEM
+                         ============================================= -->
+
+                    <article class="chart-card">
+
+                        <div class="chart-header">
+
+                            <div>
+
+                                <span class="card-eyebrow">
+                                    DEFASAGEM TEMPORAL
+                                </span>
+
+                                <h2>
+                                    Efeito defasado
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <p class="chart-description">
+
+                            Associação entre a intensidade das
+                            narrativas e o retorno observado
+                            posteriormente.
+
+                        </p>
+
+
+                        <div class="chart-container chart-container-small">
+
+                            <canvas
+                                id="lagChart"
+                            ></canvas>
+
+                        </div>
+
+                    </article>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     TABELA DE NARRATIVAS
+                     ================================================= -->
+
+                <section class="narrative-ranking-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                ANÁLISE COMPARATIVA
+                            </span>
+
+                            <h2>
+                                Relação entre narrativas e retorno
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="table-wrapper">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Narrativa
+                                    </th>
+
+                                    <th>
+                                        Notícias
+                                    </th>
+
+                                    <th>
+                                        Intensidade
+                                    </th>
+
+                                    <th>
+                                        Correlação
+                                    </th>
+
+                                    <th>
+                                        Direção
+                                    </th>
+
+                                    <th>
+                                        Interpretação
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="narrativeTableBody">
+
+                                <tr>
+
+                                    <td colspan="6">
+                                        Aguardando dados...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     DEFASAGENS
+                     ================================================= -->
+
+                <section class="lag-analysis-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                ANÁLISE TEMPORAL
+                            </span>
+
+                            <h2>
+                                Defasagem entre narrativa e preço
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="lagAnalysisContainer"
+                        class="lag-analysis-container"
+                    >
+
+                        <div class="empty-analysis">
+
+                            Aguardando dados de defasagem...
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     METODOLOGIA
+                     ================================================= -->
+
+                <section class="methodology-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                METODOLOGIA
+                            </span>
+
+                            <h2>
+                                Como interpretar esta análise
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="methodology-content">
+
+                        <p>
+
+                            Esta página relaciona informações históricas
+                            de mercado com as narrativas identificadas
+                            nas notícias armazenadas no sistema.
+
+                        </p>
+
+
+                        <p>
+
+                            A <strong>intensidade narrativa</strong>
+                            representa a concentração de notícias
+                            associadas a determinada narrativa
+                            em um período.
+
+                        </p>
+
+
+                        <p>
+
+                            A <strong>correlação</strong> indica
+                            associação estatística entre duas séries.
+                            Uma correlação observada nesta análise
+                            <strong>não significa que uma variável
+                            causou a outra</strong>.
+
+                        </p>
+
+
+                        <p>
+
+                            As análises de defasagem verificam se
+                            uma associação aparece quando o retorno
+                            do ativo é observado posteriormente
+                            à atividade narrativa.
+
+                        </p>
+
+
+                        <p>
+
+                            Portanto, os resultados devem ser
+                            interpretados como evidências de
+                            associação temporal e estatística,
+                            e não como prova de causalidade.
+
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+            </main>
+
 
         </div>
 
 
-        <div class="analysis-header-right">
+    </div>
 
-            <span class="market-status">
 
-                <span class="market-status-dot"></span>
-
-                MERCADO AO VIVO
-
-            </span>
-
-            <a
-                href="../index.html"
-                class="back-dashboard"
-            >
-                ← Dashboard
-            </a>
-
-        </div>
-
-    </header>
-
-
-    <!--
-    ============================================================
-    CONTEÚDO PRINCIPAL
-    ============================================================
-    -->
-
-    <main class="analysis-container">
-
-
-        <!--
-        ========================================================
-        TÍTULO
-        ========================================================
-        -->
-
-        <section class="analysis-introduction">
-
-            <div>
-
-                <span class="section-eyebrow">
-                    LABORATÓRIO DE ANÁLISE
-                </span>
-
-                <h1>
-                    Narrativas × Preço
-                </h1>
-
-                <p>
-                    Análise das relações entre comportamento de preços,
-                    sentimento das notícias, intensidade narrativa,
-                    volume informacional e volatilidade dos ativos.
-                </p>
-
-            </div>
-
-        </section>
-
-
-        <!--
-        ========================================================
-        CONTROLES
-        ========================================================
-        -->
-
-        <section class="analysis-controls">
-
-            <div class="control-group">
-
-                <label for="coinSelector">
-                    Criptomoeda
-                </label>
-
-                <select id="coinSelector">
-
-                    <option value="all">
-                        Visão geral do mercado
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div class="control-group">
-
-                <label for="periodSelector">
-                    Período
-                </label>
-
-                <select id="periodSelector">
-
-                    <option value="year">
-                        Último ano
-                    </option>
-
-                    <option value="month">
-                        Últimos 30 dias
-                    </option>
-
-                    <option value="week">
-                        Últimos 7 dias
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <button
-                id="refreshAnalysis"
-                class="analysis-refresh-button"
-            >
-
-                ↻
-
-                Atualizar análise
-
-            </button>
-
-        </section>
-
-
-        <!--
-        ========================================================
-        STATUS
-        ========================================================
-        -->
-
-        <div
-            id="analysisStatus"
-            class="analysis-status"
-        >
-
-            Preparando análise...
-
-        </div>
-
-
-        <!--
-        ========================================================
-        KPIs
-        ========================================================
-        -->
-
-        <section class="kpi-grid">
-
-
-            <article class="kpi-card">
-
-                <div class="kpi-label">
-                    PREÇO ATUAL
-                </div>
-
-                <div
-                    id="currentPrice"
-                    class="kpi-value"
-                >
-                    —
-                </div>
-
-                <div
-                    id="priceVariation"
-                    class="kpi-description"
-                >
-                    Aguardando dados
-                </div>
-
-            </article>
-
-
-            <article class="kpi-card">
-
-                <div class="kpi-label">
-                    NOTÍCIAS
-                </div>
-
-                <div
-                    id="newsCount"
-                    class="kpi-value"
-                >
-                    —
-                </div>
-
-                <div class="kpi-description">
-                    Notícias utilizadas na análise
-                </div>
-
-            </article>
-
-
-            <article class="kpi-card">
-
-                <div class="kpi-label">
-                    SENTIMENTO MÉDIO
-                </div>
-
-                <div
-                    id="averageSentiment"
-                    class="kpi-value"
-                >
-                    —
-                </div>
-
-                <div
-                    id="sentimentDescription"
-                    class="kpi-description"
-                >
-                    —
-                </div>
-
-            </article>
-
-
-            <article class="kpi-card">
-
-                <div class="kpi-label">
-                    VOLATILIDADE
-                </div>
-
-                <div
-                    id="volatilityValue"
-                    class="kpi-value"
-                >
-                    —
-                </div>
-
-                <div class="kpi-description">
-                    Variação observada no período
-                </div>
-
-            </article>
-
-
-        </section>
-
-
-        <!--
-        ========================================================
-        RESUMO DA ANÁLISE
-        ========================================================
-        -->
-
-        <section class="analysis-summary-card">
-
-            <div class="card-header">
-
-                <div>
-
-                    <span class="card-eyebrow">
-                        INTERPRETAÇÃO
-                    </span>
-
-                    <h2>
-                        Leitura dos resultados
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            <div
-                id="analysisInterpretation"
-                class="analysis-interpretation"
-            >
-
-                A análise será apresentada após o carregamento
-                dos dados.
-
-            </div>
-
-        </section>
-
-
-        <!--
-        ========================================================
-        GRÁFICOS PRINCIPAIS
-        ========================================================
-        -->
-
-        <section class="charts-grid">
-
-
-            <!--
-            ====================================================
-            PREÇO × SENTIMENTO
-            ====================================================
-            -->
-
-            <article class="chart-card chart-card-large">
-
-                <div class="chart-header">
-
-                    <div>
-
-                        <span class="card-eyebrow">
-                            RELAÇÃO TEMPORAL
-                        </span>
-
-                        <h2>
-                            Preço × Sentimento
-                        </h2>
-
-                    </div>
-
-                    <span class="chart-info">
-                        Associação temporal
-                    </span>
-
-                </div>
-
-
-                <p class="chart-description">
-
-                    Compara a evolução do preço do ativo com
-                    o sentimento médio identificado nas notícias.
-
-                </p>
-
-
-                <div class="chart-container">
-
-                    <canvas
-                        id="priceSentimentChart"
-                    ></canvas>
-
-                </div>
-
-            </article>
-
-
-            <!--
-            ====================================================
-            SENTIMENTO
-            ====================================================
-            -->
-
-            <article class="chart-card">
-
-                <div class="chart-header">
-
-                    <div>
-
-                        <span class="card-eyebrow">
-                            SENTIMENTO
-                        </span>
-
-                        <h2>
-                            Distribuição
-                        </h2>
-
-                    </div>
-
-                </div>
-
-
-                <p class="chart-description">
-
-                    Distribuição das notícias entre sentimento
-                    positivo, neutro e negativo.
-
-                </p>
-
-
-                <div class="chart-container chart-container-small">
-
-                    <canvas
-                        id="sentimentDistributionChart"
-                    ></canvas>
-
-                </div>
-
-            </article>
-
-
-            <!--
-            ====================================================
-            NARRATIVA × PREÇO
-            ====================================================
-            -->
-
-            <article class="chart-card chart-card-large">
-
-                <div class="chart-header">
-
-                    <div>
-
-                        <span class="card-eyebrow">
-                            NARRATIVAS
-                        </span>
-
-                        <h2>
-                            Narrativa × Preço
-                        </h2>
-
-                    </div>
-
-                    <span class="chart-info">
-                        Intensidade narrativa
-                    </span>
-
-                </div>
-
-
-                <p class="chart-description">
-
-                    Mostra como a intensidade das principais narrativas
-                    se distribui ao longo da evolução do ativo.
-
-                </p>
-
-
-                <div class="chart-container">
-
-                    <canvas
-                        id="narrativePriceChart"
-                    ></canvas>
-
-                </div>
-
-            </article>
-
-
-            <!--
-            ====================================================
-            VOLUME DE NOTÍCIAS × RETORNO
-            ====================================================
-            -->
-
-            <article class="chart-card">
-
-                <div class="chart-header">
-
-                    <div>
-
-                        <span class="card-eyebrow">
-                            ATIVIDADE INFORMACIONAL
-                        </span>
-
-                        <h2>
-                            Notícias × Retorno
-                        </h2>
-
-                    </div>
-
-                </div>
-
-
-                <p class="chart-description">
-
-                    Compara o volume diário de notícias com
-                    a variação observada no preço.
-
-                </p>
-
-
-                <div class="chart-container chart-container-small">
-
-                    <canvas
-                        id="newsReturnChart"
-                    ></canvas>
-
-                </div>
-
-            </article>
-
-
-            <!--
-            ====================================================
-            NARRATIVA × VOLATILIDADE
-            ====================================================
-            -->
-
-            <article class="chart-card chart-card-large">
-
-                <div class="chart-header">
-
-                    <div>
-
-                        <span class="card-eyebrow">
-                            RISCO
-                        </span>
-
-                        <h2>
-                            Narrativa × Volatilidade
-                        </h2>
-
-                    </div>
-
-                </div>
-
-
-                <p class="chart-description">
-
-                    Observa se períodos de maior intensidade narrativa
-                    também apresentam maior variação de preço.
-
-                </p>
-
-
-                <div class="chart-container">
-
-                    <canvas
-                        id="narrativeVolatilityChart"
-                    ></canvas>
-
-                </div>
-
-            </article>
-
-
-            <!--
-            ====================================================
-            DEFASAGEM
-            ====================================================
-            -->
-
-            <article class="chart-card">
-
-                <div class="chart-header">
-
-                    <div>
-
-                        <span class="card-eyebrow">
-                            DEFASAGEM TEMPORAL
-                        </span>
-
-                        <h2>
-                            Efeito defasado
-                        </h2>
-
-                    </div>
-
-                </div>
-
-
-                <p class="chart-description">
-
-                    Associação entre a intensidade das narrativas
-                    e o retorno observado posteriormente.
-
-                </p>
-
-
-                <div class="chart-container chart-container-small">
-
-                    <canvas
-                        id="lagChart"
-                    ></canvas>
-
-                </div>
-
-            </article>
-
-
-        </section>
-
-
-        <!--
-        ========================================================
-        TABELA DE NARRATIVAS
-        ========================================================
-        -->
-
-        <section class="narrative-ranking-card">
-
-            <div class="card-header">
-
-                <div>
-
-                    <span class="card-eyebrow">
-                        ANÁLISE COMPARATIVA
-                    </span>
-
-                    <h2>
-                        Relação entre narrativas e retorno
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            <div class="table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Narrativa
-                            </th>
-
-                            <th>
-                                Notícias
-                            </th>
-
-                            <th>
-                                Intensidade
-                            </th>
-
-                            <th>
-                                Correlação
-                            </th>
-
-                            <th>
-                                Direção
-                            </th>
-
-                            <th>
-                                Interpretação
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody id="narrativeTableBody">
-
-                        <tr>
-
-                            <td colspan="6">
-                                Aguardando dados...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </section>
-
-
-        <!--
-        ========================================================
-        DEFASAGENS
-        ========================================================
-        -->
-
-        <section class="lag-analysis-card">
-
-            <div class="card-header">
-
-                <div>
-
-                    <span class="card-eyebrow">
-                        ANÁLISE TEMPORAL
-                    </span>
-
-                    <h2>
-                        Defasagem entre narrativa e preço
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            <div
-                id="lagAnalysisContainer"
-                class="lag-analysis-container"
-            >
-
-                <div class="empty-analysis">
-
-                    Aguardando dados de defasagem...
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!--
-        ========================================================
-        METODOLOGIA
-        ========================================================
-        -->
-
-        <section class="methodology-card">
-
-            <div class="card-header">
-
-                <div>
-
-                    <span class="card-eyebrow">
-                        METODOLOGIA
-                    </span>
-
-                    <h2>
-                        Como interpretar esta análise
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            <div class="methodology-content">
-
-                <p>
-
-                    Esta página relaciona informações históricas
-                    de mercado com as narrativas identificadas
-                    nas notícias armazenadas no sistema.
-
-                </p>
-
-
-                <p>
-
-                    A <strong>intensidade narrativa</strong> representa
-                    a concentração de notícias associadas a determinada
-                    narrativa em um período.
-
-                </p>
-
-
-                <p>
-
-                    A <strong>correlação</strong> indica associação
-                    estatística entre duas séries. Uma correlação
-                    observada nesta análise <strong>não significa que
-                    uma variável causou a outra</strong>.
-
-                </p>
-
-
-                <p>
-
-                    As análises de defasagem verificam se uma associação
-                    aparece quando o retorno do ativo é observado
-                    posteriormente à atividade narrativa.
-
-                </p>
-
-
-                <p>
-
-                    Portanto, os resultados devem ser interpretados
-                    como evidências de associação temporal e estatística,
-                    e não como prova de causalidade.
-
-                </p>
-
-            </div>
-
-        </section>
-
-
-    </main>
-
-
-    <!--
-    ============================================================
-    JAVASCRIPT
-    ============================================================
-    -->
+    <!-- ============================================================
+         JAVASCRIPT
+         ============================================================ -->
 
     <script
         src="../assets/js/narrative-price.js"
     ></script>
+
 
 </body>
 
