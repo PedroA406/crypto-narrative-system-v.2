@@ -610,110 +610,89 @@ async function getCoinBySymbol(
 |
 */
 
-async function getCoinHistory(
-    coinId,
-    period = "day"
-) {
+async function getCoinHistory(coinId, period = "day") {
 
     try {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Validação do ID
-        |--------------------------------------------------------------------------
-        */
-
         if (!coinId) {
-
             throw new Error(
                 "ID da moeda não informado."
             );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Períodos disponíveis
-        |--------------------------------------------------------------------------
-        */
-
         const periods = {
-
             day: 1,
-
             week: 7,
-
             month: 30,
-
             year: 365
-
         };
 
-
-        const days =
-            periods[period];
-
+        const days = periods[period];
 
         if (!days) {
-
             throw new Error(
                 "Período inválido. Use day, week, month ou year."
             );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | URL correta da CoinGecko
-        |--------------------------------------------------------------------------
-        */
-
         const url =
-            `${COINGECKO_API}/coins/${encodeURIComponent(
-                coinId
-            )}/market_chart`;
-
+            `${COINGECKO_API}/coins/` +
+            `${encodeURIComponent(coinId)}` +
+            `/market_chart`;
 
         console.log(
-            `BUSCANDO HISTÓRICO: ${coinId} | ${period} | ${days} dias`
+            "================================="
         );
 
+        console.log(
+            "BUSCANDO HISTÓRICO DA MOEDA"
+        );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Requisição
-        |--------------------------------------------------------------------------
-        */
+        console.log(
+            "Coin ID:",
+            coinId
+        );
+
+        console.log(
+            "Período:",
+            period
+        );
+
+        console.log(
+            "Dias:",
+            days
+        );
+
+        console.log(
+            "URL:",
+            url
+        );
+
+        console.log(
+            "================================="
+        );
 
         const response =
             await axios.get(
                 url,
                 {
-
                     params: {
-
-                        vs_currency:
-                            "usd",
-
-                        days:
-                            days
-
+                        vs_currency: "usd",
+                        days: days
                     },
-
-                    timeout:
-                        15000
-
+                    timeout: 20000,
+                    headers: {
+                        "Accept": "application/json",
+                        "User-Agent":
+                            "Crypto-Narrative-System/1.0"
+                    }
                 }
             );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Verifica resposta
-        |--------------------------------------------------------------------------
-        */
+        console.log(
+            "CoinGecko respondeu:",
+            response.status
+        );
 
         if (
             !response.data ||
@@ -723,90 +702,82 @@ async function getCoinHistory(
         ) {
 
             throw new Error(
-                "A CoinGecko não retornou dados históricos."
+                "A CoinGecko não retornou o array de preços."
             );
-
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Verifica se recebeu pontos
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            response.data.prices.length === 0
-        ) {
-
-            throw new Error(
-                "Nenhum dado histórico foi encontrado."
-            );
-
-        }
-
 
         console.log(
-            `HISTÓRICO RECEBIDO: ${response.data.prices.length} pontos`
+            "Quantidade de preços:",
+            response.data.prices.length
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Retorna somente os preços
-        |--------------------------------------------------------------------------
-        */
-
         return {
-
             prices:
                 response.data.prices
-
         };
-
 
     } catch (error) {
 
         console.log(
-            "ERRO AO BUSCAR HISTÓRICO DA MOEDA:"
+            "================================="
         );
 
+        console.log(
+            "ERRO AO BUSCAR HISTÓRICO"
+        );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Erro HTTP
-        |--------------------------------------------------------------------------
-        */
+        console.log(
+            "================================="
+        );
 
-        if (
-            error.response
-        ) {
+        console.log(
+            "Coin ID:",
+            coinId
+        );
+
+        console.log(
+            "Período:",
+            period
+        );
+
+        console.log(
+            "Mensagem:",
+            error.message
+        );
+
+        if (error.response) {
 
             console.log(
-                "STATUS:",
+                "STATUS DA COINGECKO:",
                 error.response.status
             );
 
-
             console.log(
-                "RESPOSTA:",
+                "DADOS DA COINGECKO:",
                 error.response.data
             );
 
         }
 
+        if (error.request) {
+
+            console.log(
+                "A requisição foi enviada, mas não houve resposta."
+            );
+
+        }
 
         console.log(
-            error.message
+            "================================="
         );
-
 
         throw new Error(
+            error.response?.data?.error ||
+            error.response?.data?.status?.error_message ||
+            error.message ||
             "Não foi possível obter o histórico da moeda."
         );
-
     }
-
 }
 
 
