@@ -1,0 +1,1018 @@
+/* ============================================================
+   CRYPTO NARRATIVE SYSTEM
+   NARRATIVE × PRICE
+   ============================================================ */
+
+
+:root {
+
+    --price-bg:
+        #071018;
+
+    --price-panel:
+        rgba(15, 25, 36, 0.92);
+
+    --price-border:
+        rgba(255, 255, 255, 0.08);
+
+    --price-text:
+        #eef3f8;
+
+    --price-muted:
+        #8d9aaa;
+
+    --price-accent:
+        #43d9b0;
+
+}
+
+
+/* ============================================================
+   BODY
+   ============================================================ */
+
+.narrative-price-page {
+
+    background:
+        var(--price-bg);
+
+    color:
+        var(--price-text);
+
+}
+
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+
+.narrative-price-page
+.main-content {
+
+    padding:
+        34px;
+
+}
+
+
+/* ============================================================
+   HERO
+   ============================================================ */
+
+.price-analysis-hero {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-start;
+
+    gap:
+        30px;
+
+    padding:
+        34px;
+
+    margin-bottom:
+        22px;
+
+    border:
+        1px solid
+        var(--price-border);
+
+    border-radius:
+        18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(28, 52, 68, 0.75),
+            rgba(10, 20, 30, 0.96)
+        );
+
+}
+
+
+.price-analysis-hero h1 {
+
+    margin:
+        8px 0 12px;
+
+    font-size:
+        32px;
+
+}
+
+
+.price-analysis-hero p {
+
+    max-width:
+        850px;
+
+    color:
+        var(--price-muted);
+
+    line-height:
+        1.7;
+
+}
+
+
+.methodology-note {
+
+    display:
+        inline-block;
+
+    margin-top:
+        16px;
+
+    padding:
+        10px 14px;
+
+    border:
+        1px solid
+        rgba(67, 217, 176, 0.18);
+
+    border-radius:
+        9px;
+
+    background:
+        rgba(67, 217, 176, 0.06);
+
+    color:
+        #a8b5c1;
+
+    font-size:
+        13px;
+
+}
+
+
+.methodology-note strong {
+
+    color:
+        var(--price-accent);
+
+}
+
+
+/* ============================================================
+   TOOLBAR
+   ============================================================ */
+
+.analysis-toolbar {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-end;
+
+    gap:
+        25px;
+
+    padding:
+        20px 24px;
+
+    margin-bottom:
+        18px;
+
+    border:
+        1px solid
+        var(--price-border);
+
+    border-radius:
+        14px;
+
+    background:
+        var(--price-panel);
+
+}
+
+
+.toolbar-group {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        9px;
+
+}
+
+
+.toolbar-group label {
+
+    font-size:
+        11px;
+
+    letter-spacing:
+        0.12em;
+
+    color:
+        var(--price-muted);
+
+}
+
+
+.period-buttons {
+
+    display:
+        flex;
+
+    gap:
+        7px;
+
+}
+
+
+.analysis-period-btn {
+
+    border:
+        1px solid
+        var(--price-border);
+
+    background:
+        rgba(255,255,255,0.03);
+
+    color:
+        #aab5c1;
+
+    padding:
+        9px 15px;
+
+    border-radius:
+        8px;
+
+    cursor:
+        pointer;
+
+}
+
+
+.analysis-period-btn:hover {
+
+    background:
+        rgba(255,255,255,0.07);
+
+}
+
+
+.analysis-period-btn.active {
+
+    background:
+        rgba(67,217,176,0.13);
+
+    border-color:
+        rgba(67,217,176,0.35);
+
+    color:
+        var(--price-accent);
+
+}
+
+
+#assetSelector {
+
+    min-width:
+        220px;
+
+    padding:
+        10px 14px;
+
+    border:
+        1px solid
+        var(--price-border);
+
+    border-radius:
+        8px;
+
+    background:
+        #101b26;
+
+    color:
+        var(--price-text);
+
+}
+
+
+/* ============================================================
+   STATUS
+   ============================================================ */
+
+.analysis-status {
+
+    margin:
+        14px 0;
+
+    padding:
+        12px 16px;
+
+    border-radius:
+        9px;
+
+    color:
+        var(--price-muted);
+
+    background:
+        rgba(255,255,255,0.025);
+
+    font-size:
+        13px;
+
+}
+
+
+/* ============================================================
+   KPIS
+   ============================================================ */
+
+.price-kpis {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap:
+        14px;
+
+    margin:
+        20px 0;
+
+}
+
+
+.price-kpi {
+
+    padding:
+        22px;
+
+    min-height:
+        130px;
+
+    border:
+        1px solid
+        var(--price-border);
+
+    border-radius:
+        14px;
+
+    background:
+        var(--price-panel);
+
+}
+
+
+.price-kpi span {
+
+    display:
+        block;
+
+    color:
+        var(--price-muted);
+
+    font-size:
+        10px;
+
+    letter-spacing:
+        0.12em;
+
+}
+
+
+.price-kpi strong {
+
+    display:
+        block;
+
+    margin:
+        12px 0 7px;
+
+    font-size:
+        28px;
+
+}
+
+
+.price-kpi .kpi-text {
+
+    font-size:
+        18px;
+
+}
+
+
+.price-kpi small {
+
+    color:
+        #687786;
+
+}
+
+
+/* ============================================================
+   GRID
+   ============================================================ */
+
+.analysis-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        minmax(0, 2fr)
+        minmax(300px, 1fr);
+
+    gap:
+        16px;
+
+}
+
+
+.analysis-panel {
+
+    border:
+        1px solid
+        var(--price-border);
+
+    border-radius:
+        16px;
+
+    background:
+        var(--price-panel);
+
+    overflow:
+        hidden;
+
+}
+
+
+.panel-large {
+
+    min-width:
+        0;
+
+}
+
+
+.full-panel {
+
+    margin-top:
+        16px;
+
+}
+
+
+.panel-header {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    padding:
+        24px 24px 8px;
+
+}
+
+
+.panel-header h2 {
+
+    margin:
+        7px 0;
+
+    font-size:
+        19px;
+
+}
+
+
+.panel-header p {
+
+    margin:
+        0;
+
+    color:
+        var(--price-muted);
+
+    font-size:
+        13px;
+
+}
+
+
+.panel-kicker {
+
+    color:
+        var(--price-accent);
+
+    font-size:
+        10px;
+
+    letter-spacing:
+        0.13em;
+
+}
+
+
+/* ============================================================
+   GRÁFICOS
+   ============================================================ */
+
+.chart-container {
+
+    position:
+        relative;
+
+    padding:
+        20px;
+
+}
+
+
+.chart-container.large {
+
+    height:
+        390px;
+
+}
+
+
+.chart-container.timeline {
+
+    height:
+        350px;
+
+}
+
+
+/* ============================================================
+   INTERPRETAÇÃO
+   ============================================================ */
+
+.interpretation-content {
+
+    padding:
+        15px 24px 28px;
+
+}
+
+
+.interpretation-card {
+
+    padding:
+        16px;
+
+    margin-bottom:
+        12px;
+
+    border-left:
+        3px solid
+        var(--price-accent);
+
+    background:
+        rgba(255,255,255,0.025);
+
+}
+
+
+.interpretation-card strong {
+
+    display:
+        block;
+
+    margin-bottom:
+        7px;
+
+}
+
+
+.interpretation-card p {
+
+    margin:
+        0;
+
+    color:
+        var(--price-muted);
+
+    line-height:
+        1.6;
+
+    font-size:
+        13px;
+
+}
+
+
+/* ============================================================
+   TABELA
+   ============================================================ */
+
+.table-wrapper {
+
+    padding:
+        10px 24px 28px;
+
+    overflow-x:
+        auto;
+
+}
+
+
+.price-analysis-table {
+
+    width:
+        100%;
+
+    border-collapse:
+        collapse;
+
+    min-width:
+        800px;
+
+}
+
+
+.price-analysis-table th {
+
+    text-align:
+        left;
+
+    padding:
+        13px 10px;
+
+    color:
+        var(--price-muted);
+
+    font-size:
+        10px;
+
+    letter-spacing:
+        0.08em;
+
+    border-bottom:
+        1px solid
+        var(--price-border);
+
+}
+
+
+.price-analysis-table td {
+
+    padding:
+        14px 10px;
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,0.045);
+
+    font-size:
+        13px;
+
+}
+
+
+.price-analysis-table tr:hover {
+
+    background:
+        rgba(255,255,255,0.025);
+
+}
+
+
+.correlation-positive {
+
+    color:
+        #43d9b0;
+
+}
+
+
+.correlation-negative {
+
+    color:
+        #ff7180;
+
+}
+
+
+.correlation-neutral {
+
+    color:
+        #9ca8b5;
+
+}
+
+
+/* ============================================================
+   ATIVOS
+   ============================================================ */
+
+.asset-analysis-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(
+                250px,
+                1fr
+            )
+        );
+
+    gap:
+        12px;
+
+    padding:
+        10px 24px 28px;
+
+}
+
+
+.asset-analysis-card {
+
+    padding:
+        18px;
+
+    border:
+        1px solid
+        var(--price-border);
+
+    border-radius:
+        12px;
+
+    background:
+        rgba(255,255,255,0.02);
+
+}
+
+
+.asset-analysis-card-header {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        15px;
+
+}
+
+
+.asset-name {
+
+    font-weight:
+        700;
+
+}
+
+
+.asset-symbol {
+
+    color:
+        var(--price-muted);
+
+    font-size:
+        11px;
+
+}
+
+
+.asset-stat {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    padding:
+        8px 0;
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,0.04);
+
+}
+
+
+.asset-stat span {
+
+    color:
+        var(--price-muted);
+
+    font-size:
+        12px;
+
+}
+
+
+/* ============================================================
+   METODOLOGIA
+   ============================================================ */
+
+.methodology-panel {
+
+    margin-top:
+        16px;
+
+    padding:
+        28px;
+
+    border:
+        1px solid
+        var(--price-border);
+
+    border-radius:
+        16px;
+
+    background:
+        rgba(15,25,36,0.78);
+
+}
+
+
+.methodology-panel h2 {
+
+    margin:
+        8px 0 22px;
+
+}
+
+
+.methodology-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap:
+        18px;
+
+}
+
+
+.methodology-grid div {
+
+    padding:
+        16px;
+
+    border:
+        1px solid
+        var(--price-border);
+
+    border-radius:
+        10px;
+
+}
+
+
+.methodology-grid strong {
+
+    display:
+        block;
+
+    margin-bottom:
+        8px;
+
+}
+
+
+.methodology-grid p {
+
+    margin:
+        0;
+
+    color:
+        var(--price-muted);
+
+    font-size:
+        13px;
+
+    line-height:
+        1.6;
+
+}
+
+
+/* ============================================================
+   VAZIO
+   ============================================================ */
+
+.empty-analysis {
+
+    padding:
+        30px;
+
+    text-align:
+        center;
+
+    color:
+        var(--price-muted);
+
+}
+
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+
+@media (
+    max-width: 1100px
+) {
+
+    .price-kpis {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+    }
+
+
+    .methodology-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+    }
+
+}
+
+
+@media (
+    max-width: 800px
+) {
+
+    .narrative-price-page
+    .main-content {
+
+        padding:
+            18px;
+
+    }
+
+
+    .price-analysis-hero {
+
+        flex-direction:
+            column;
+
+    }
+
+
+    .analysis-toolbar {
+
+        flex-direction:
+            column;
+
+        align-items:
+            stretch;
+
+    }
+
+
+    .analysis-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .price-kpis {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .methodology-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+}
