@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Crypto Narrative System — Análise da relação entre narrativas e preços"
+    >
+
+    <title>
+        Crypto Narrative System — Narrative × Price
+    </title>
+
+
+    <link
+        rel="stylesheet"
+        href="../assets/css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../assets/css/narrative-price.css"
+    >
+
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js"
+    ></script>
+
+</head>
+
+
+<body class="narrative-price-page">
+
+
+<div class="app-shell">
+
+
+    <!-- ========================================================
+         SIDEBAR
+         ======================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-inner">
+
+
+            <div class="brand">
+
+                <div class="brand-mark">
+
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </div>
+
+
+                <div class="brand-text">
+
+                    <strong>
+                        CRYPTO
+                    </strong>
+
+                    <span>
+                        NARRATIVE SYSTEM
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="sidebar-status">
+
+                <span class="status-dot"></span>
+
+                <div>
+
+                    <strong>
+                        Sistema operacional
+                    </strong>
+
+                    <span>
+                        Conexão com dados ativa
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <nav class="main-navigation">
+
+
+                <div class="nav-group">
+
+                    <span class="nav-label">
+                        Plataforma
+                    </span>
+
+
+                    <a
+                        href="dashboard.html"
+                        class="nav-item"
+                    >
+
+                        <span class="nav-icon">
+                            ◈
+                        </span>
+
+                        <span class="nav-text">
+                            Dashboard
+                        </span>
+
+                    </a>
+
+
+                    <a
+                        href="narrative-analysis.html"
+                        class="nav-item"
+                    >
+
+                        <span class="nav-icon">
+                            ↗
+                        </span>
+
+                        <span class="nav-text">
+                            Narrative Intelligence
+                        </span>
+
+                    </a>
+
+
+                    <a
+                        href="narrative-price.html"
+                        class="nav-item active"
+                    >
+
+                        <span class="nav-icon">
+                            ⟷
+                        </span>
+
+                        <span class="nav-text">
+                            Narrative × Price
+                        </span>
+
+                    </a>
+
+                </div>
+
+
+                <div class="nav-group">
+
+                    <span class="nav-label">
+                        Sistema
+                    </span>
+
+
+                    <a
+                        href="profile.html"
+                        class="nav-item"
+                    >
+
+                        <span class="nav-icon">
+                            ○
+                        </span>
+
+                        <span class="nav-text">
+                            Perfil
+                        </span>
+
+                    </a>
+
+                </div>
+
+            </nav>
+
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- ========================================================
+         CONTEÚDO
+         ======================================================== -->
+
+    <main class="main-content">
+
+
+        <!-- ====================================================
+             HERO
+             ==================================================== -->
+
+        <section class="price-analysis-hero">
+
+            <div>
+
+                <div class="section-kicker">
+                    NARRATIVE × PRICE
+                </div>
+
+
+                <h1>
+                    Relação entre Narrativas e Preços
+                </h1>
+
+
+                <p>
+
+                    Esta camada cruza a intensidade das narrativas
+                    identificadas nas notícias com o comportamento
+                    histórico dos preços dos ativos monitorados.
+
+                </p>
+
+
+                <div class="methodology-note">
+
+                    <strong>
+                        Importante:
+                    </strong>
+
+                    associação estatística não significa
+                    causalidade.
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="analysis-refresh-btn"
+                onclick="refreshNarrativePrice()"
+            >
+
+                ↻ Atualizar análise
+
+            </button>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             FILTROS
+             ==================================================== -->
+
+        <section class="analysis-toolbar">
+
+            <div class="toolbar-group">
+
+                <label>
+                    Período
+                </label>
+
+
+                <div class="period-buttons">
+
+                    <button
+                        class="analysis-period-btn"
+                        data-period="7d"
+                        onclick="changePricePeriod('7d')"
+                    >
+                        7 dias
+                    </button>
+
+
+                    <button
+                        class="analysis-period-btn active"
+                        data-period="30d"
+                        onclick="changePricePeriod('30d')"
+                    >
+                        30 dias
+                    </button>
+
+
+                    <button
+                        class="analysis-period-btn"
+                        data-period="60d"
+                        onclick="changePricePeriod('60d')"
+                    >
+                        60 dias
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="toolbar-group">
+
+                <label for="assetSelector">
+                    Ativo
+                </label>
+
+
+                <select
+                    id="assetSelector"
+                    onchange="changePriceAsset(this.value)"
+                >
+
+                    <option value="ALL">
+                        Todos os ativos
+                    </option>
+
+                </select>
+
+            </div>
+
+        </section>
+
+
+
+        <div
+            id="priceAnalysisStatus"
+            class="analysis-status"
+        >
+            Preparando análise...
+        </div>
+
+
+
+        <!-- ====================================================
+             KPIs
+             ==================================================== -->
+
+        <section class="price-kpis">
+
+
+            <article class="price-kpi">
+
+                <span>
+                    ATIVOS ANALISADOS
+                </span>
+
+                <strong id="kpiAssets">
+                    —
+                </strong>
+
+                <small>
+                    ativos do universo monitorado
+                </small>
+
+            </article>
+
+
+            <article class="price-kpi">
+
+                <span>
+                    NOTÍCIAS UTILIZADAS
+                </span>
+
+                <strong id="kpiNews">
+                    —
+                </strong>
+
+                <small>
+                    registros históricos
+                </small>
+
+            </article>
+
+
+            <article class="price-kpi">
+
+                <span>
+                    NARRATIVA DOMINANTE
+                </span>
+
+                <strong
+                    id="kpiNarrative"
+                    class="kpi-text"
+                >
+                    —
+                </strong>
+
+                <small>
+                    maior volume de notícias
+                </small>
+
+            </article>
+
+
+            <article class="price-kpi">
+
+                <span>
+                    ASSOCIAÇÃO MÉDIA
+                </span>
+
+                <strong id="kpiCorrelation">
+                    —
+                </strong>
+
+                <small
+                    id="kpiCorrelationLabel"
+                >
+                    Pearson
+                </small>
+
+            </article>
+
+
+        </section>
+
+
+
+        <!-- ====================================================
+             GRÁFICO PRINCIPAL
+             ==================================================== -->
+
+        <section class="analysis-grid">
+
+
+            <article class="analysis-panel panel-large">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <span class="panel-kicker">
+                            NARRATIVE PRESSURE
+                        </span>
+
+                        <h2>
+                            Narrativa × Retorno do preço
+                        </h2>
+
+                        <p>
+                            Cada ponto representa uma relação
+                            entre uma narrativa e um ativo.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="chart-container large">
+
+                    <canvas
+                        id="narrativePriceScatter"
+                    ></canvas>
+
+                </div>
+
+            </article>
+
+
+            <!-- =================================================
+                 INTERPRETAÇÃO
+                 ================================================= -->
+
+            <article class="analysis-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <span class="panel-kicker">
+                            LEITURA
+                        </span>
+
+                        <h2>
+                            Como interpretar
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="analysisInterpretation"
+                    class="interpretation-content"
+                >
+
+                    <p>
+                        Aguardando os dados da análise.
+                    </p>
+
+                </div>
+
+            </article>
+
+
+        </section>
+
+
+
+        <!-- ====================================================
+             EVOLUÇÃO TEMPORAL
+             ==================================================== -->
+
+        <section class="analysis-panel full-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        TIME SERIES
+                    </span>
+
+                    <h2>
+                        Evolução temporal
+                    </h2>
+
+                    <p>
+                        Comparação entre a pressão narrativa
+                        agregada e o retorno médio dos ativos.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container timeline">
+
+                <canvas
+                    id="narrativeTimelineChart"
+                ></canvas>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             TABELA DE NARRATIVAS
+             ==================================================== -->
+
+        <section class="analysis-panel full-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        NARRATIVE MATRIX
+                    </span>
+
+                    <h2>
+                        Relação por narrativa
+                    </h2>
+
+                    <p>
+                        Indicadores estatísticos calculados
+                        para cada narrativa identificada.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="table-wrapper"
+                id="narrativeTable"
+            >
+
+                <div class="empty-analysis">
+                    Aguardando dados...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             RELAÇÃO POR ATIVO
+             ==================================================== -->
+
+        <section class="analysis-panel full-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        ASSET ANALYSIS
+                    </span>
+
+                    <h2>
+                        Relação por ativo
+                    </h2>
+
+                    <p>
+                        Visão comparativa dos ativos monitorados.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="asset-analysis-grid"
+                id="assetAnalysisGrid"
+            >
+
+                <div class="empty-analysis">
+                    Aguardando dados...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             METODOLOGIA
+             ==================================================== -->
+
+        <section class="methodology-panel">
+
+            <div class="section-kicker">
+                METODOLOGIA
+            </div>
+
+
+            <h2>
+                O que está sendo calculado?
+            </h2>
+
+
+            <div class="methodology-grid">
+
+
+                <div>
+
+                    <strong>
+                        Intensidade narrativa
+                    </strong>
+
+                    <p>
+
+                        Participação da narrativa no conjunto
+                        de notícias do ativo naquele dia,
+                        multiplicada pelo sentimento médio.
+
+                    </p>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Retorno
+                    </strong>
+
+                    <p>
+
+                        Variação percentual diária do preço,
+                        em vez do preço absoluto.
+
+                    </p>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Correlação
+                    </strong>
+
+                    <p>
+
+                        Correlação de Pearson entre intensidade
+                        narrativa e retorno diário.
+
+                    </p>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Dia seguinte
+                    </strong>
+
+                    <p>
+
+                        Compara a intensidade narrativa de um
+                        dia com o retorno observado no dia seguinte.
+
+                    </p>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script
+    src="../assets/js/narrative-price.js"
+></script>
+
+</body>
+
+</html>
