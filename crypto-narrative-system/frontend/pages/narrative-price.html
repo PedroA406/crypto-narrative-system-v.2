@@ -766,6 +766,47 @@
 
                 </div>
 
+
+                <!-- =================================================
+                     BOTÃO DE EXECUTAR ANÁLISE
+                     ================================================= -->
+
+                <div class="control-group analysis-action">
+
+                    <label>
+                        EXECUÇÃO
+                    </label>
+
+                    <button
+                        class="analysis-button"
+                        id="analyzeSelection"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24">
+
+                            <path
+                                d="M4 19V5"
+                            ></path>
+
+                            <path
+                                d="M4 19h16"
+                            ></path>
+
+                            <path
+                                d="m7 15 4-5 3 3 5-7"
+                            ></path>
+
+                        </svg>
+
+                        <span>
+                            Executar análise
+                        </span>
+
+                    </button>
+
+                </div>
+
             </section>
 
 
@@ -997,9 +1038,7 @@
                                 INTERPRETAÇÃO AUTOMÁTICA
                             </span>
 
-                            <p
-                                id="analysisInterpretation"
-                            >
+                            <p id="analysisInterpretation">
                                 Aguardando os dados da análise.
                             </p>
 
@@ -2213,6 +2252,79 @@ document.addEventListener(
 
                 }
             );
+
+
+        /* =====================================================
+           BOTÃO EXECUTAR ANÁLISE
+           ===================================================== */
+
+        const analyzeButton =
+            document.getElementById(
+                "analyzeSelection"
+            );
+
+        const refreshButton =
+            document.getElementById(
+                "refreshAnalysis"
+            );
+
+
+        if (
+            analyzeButton &&
+            refreshButton
+        ) {
+
+            analyzeButton.addEventListener(
+                "click",
+                () => {
+
+                    const originalText =
+                        analyzeButton.innerHTML;
+
+                    analyzeButton.disabled =
+                        true;
+
+                    analyzeButton.innerHTML = `
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12 3a9 9 0 1 0 9 9"
+                            ></path>
+                            <path
+                                d="M21 3v6h-6"
+                            ></path>
+                        </svg>
+
+                        <span>
+                            Analisando...
+                        </span>
+                    `;
+
+
+                    /*
+                     * Utiliza exatamente a mesma rotina
+                     * de atualização que já existe no
+                     * botão "Atualizar análise".
+                     */
+                    refreshButton.click();
+
+
+                    setTimeout(
+                        () => {
+
+                            analyzeButton.disabled =
+                                false;
+
+                            analyzeButton.innerHTML =
+                                originalText;
+
+                        },
+                        1200
+                    );
+
+                }
+            );
+
+        }
 
 
         const profileButton =
