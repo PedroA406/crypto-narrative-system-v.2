@@ -6,7 +6,7 @@
 
 const API_BASE_URL =
     window.API_BASE_URL ||
-    "ttps://crypto-narrative-system.onrender.com";
+    "https://crypto-narrative-system.onrender.com";
 
 
 let selectedPeriod =
