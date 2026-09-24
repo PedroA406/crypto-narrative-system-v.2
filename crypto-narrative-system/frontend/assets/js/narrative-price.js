@@ -6,7 +6,7 @@
 
 const API_BASE_URL =
     window.API_BASE_URL ||
-    "http://localhost:3000";
+    "ttps://crypto-narrative-system.onrender.com";
 
 
 let selectedPeriod =
