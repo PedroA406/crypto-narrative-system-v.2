@@ -8,7 +8,8 @@
    CONFIGURAÇÃO
    ============================================================ */
 
-const API_BASE_URL = "https://crypto-narrative-system.onrender.com";
+const API_BASE_URL =
+    "https://crypto-narrative-system.onrender.com";
 
 const ANALYSIS_ENDPOINT =
     `${API_BASE_URL}/market/narratives/analysis`;
@@ -228,7 +229,10 @@ function formatNumber(value) {
 }
 
 
-function formatDecimal(value, digits = 2) {
+function formatDecimal(
+    value,
+    digits = 2
+) {
 
     return numberValue(value)
         .toLocaleString(
@@ -244,7 +248,10 @@ function formatDecimal(value, digits = 2) {
 
 function formatPercent(value) {
 
-    return `${formatDecimal(percent(value), 1)}%`;
+    return `${formatDecimal(
+        percent(value),
+        1
+    )}%`;
 
 }
 
@@ -361,12 +368,19 @@ function formatDateTime(value) {
 function getNarrative(item) {
 
     return firstDefined(
+
         item.narrativa,
+
         item.narrative,
+
         item.narrativeML,
+
         item.key,
+
         item.name,
+
         item._id
+
     );
 
 }
@@ -375,13 +389,21 @@ function getNarrative(item) {
 function getTotal(item) {
 
     return numberValue(
+
         firstDefined(
+
             item.total,
+
             item.quantidade,
+
             item.count,
+
             item.volume,
+
             item.valor
+
         )
+
     );
 
 }
@@ -390,12 +412,19 @@ function getTotal(item) {
 function getPercentage(item) {
 
     return percent(
+
         firstDefined(
+
             item.percentual,
+
             item.percentage,
+
             item.percent,
+
             item.proporcao
+
         )
+
     );
 
 }
@@ -414,6 +443,7 @@ function normalizeNarratives(list) {
     }
 
     return list
+
         .map(item => ({
 
             key:
@@ -426,7 +456,11 @@ function normalizeNarratives(list) {
                 getPercentage(item)
 
         }))
-        .filter(item => item.key);
+
+        .filter(
+            item =>
+                item.key
+        );
 
 }
 
@@ -440,14 +474,20 @@ function normalizeSentiments(list) {
     }
 
     return list
+
         .map(item => ({
 
             key:
                 firstDefined(
+
                     item.sentimento,
+
                     item.sentiment,
+
                     item.key,
+
                     item.name
+
                 ),
 
             total:
@@ -457,7 +497,11 @@ function normalizeSentiments(list) {
                 getPercentage(item)
 
         }))
-        .filter(item => item.key);
+
+        .filter(
+            item =>
+                item.key
+        );
 
 }
 
@@ -473,13 +517,20 @@ async function fetchAnalysis() {
             ANALYSIS_ENDPOINT,
             {
                 method: "GET",
+
                 headers: {
+
                     "Accept":
                         "application/json"
+
                 },
-                cache: "no-store"
+
+                cache:
+                    "no-store"
+
             }
         );
+
 
     if (!response.ok) {
 
@@ -489,19 +540,25 @@ async function fetchAnalysis() {
 
     }
 
+
     const json =
         await response.json();
+
 
     if (
         json.success === false
     ) {
 
         throw new Error(
+
             json.message
-            || "A API retornou uma falha."
+            ||
+            "A API retornou uma falha."
+
         );
 
     }
+
 
     return json.data || json;
 
@@ -519,16 +576,25 @@ function setStatus(
 ) {
 
     const status =
-        getElement("analysisStatus");
+        getElement(
+            "analysisStatus"
+        );
 
     const detailElement =
-        getElement("analysisStatusDetail");
+        getElement(
+            "analysisStatusDetail"
+        );
 
     const dot =
-        getElement("analysisStatusDot");
+        getElement(
+            "analysisStatusDot"
+        );
 
     const systemStatus =
-        getElement("systemStatusText");
+        getElement(
+            "systemStatusText"
+        );
+
 
     if (status) {
 
@@ -537,12 +603,14 @@ function setStatus(
 
     }
 
+
     if (detailElement) {
 
         detailElement.textContent =
             detail;
 
     }
+
 
     if (dot) {
 
@@ -553,16 +621,21 @@ function setStatus(
 
         dot.style.boxShadow =
             connected
+
                 ? "0 0 10px rgba(55,214,160,.5)"
+
                 : "0 0 10px rgba(237,109,125,.5)";
 
     }
+
 
     if (systemStatus) {
 
         systemStatus.textContent =
             connected
+
                 ? "Dados disponíveis"
+
                 : "Falha na conexão";
 
     }
@@ -579,97 +652,214 @@ function renderSummary(data) {
     const resumo =
         data.resumo || {};
 
+
     const total =
         firstDefined(
+
             resumo.totalNoticias,
+
             data.totalNoticias
+
         );
+
 
     const confidence =
         firstDefined(
+
             resumo.confiancaMedia,
+
             data.confiancaMedia
+
         );
+
 
     const agreement =
         firstDefined(
-            data.concordancia?.percentualConcordancia,
-            data.concordancia?.concordancia,
-            data.concordancia?.agreement,
-            data.concordancia?.percentual
+
+            data.concordancia
+                ?.percentualConcordancia,
+
+            data.concordancia
+                ?.concordancia,
+
+            data.concordancia
+                ?.agreement,
+
+            data.concordancia
+                ?.percentual
+
         );
+
 
     const latency =
         firstDefined(
+
             resumo.latenciaMediaHoras,
-            data.latenciaColeta?.mediaHoras
+
+            data.latenciaColeta
+                ?.mediaHoras
+
         );
 
 
-    getElement(
-        "analysisNewsCount"
-    ).textContent =
-        formatNumber(total);
+    const newsCount =
+        getElement(
+            "analysisNewsCount"
+        );
 
 
-    getElement(
-        "analysisConfidence"
-    ).textContent =
-        formatPercent(confidence);
+    if (newsCount) {
+
+        newsCount.textContent =
+            formatNumber(total);
+
+    }
 
 
-    getElement(
-        "analysisAgreement"
-    ).textContent =
-        formatPercent(agreement);
+    const confidenceElement =
+        getElement(
+            "analysisConfidence"
+        );
 
 
-    getElement(
-        "analysisLatency"
-    ).textContent =
-        `${formatDecimal(latency, 1)}h`;
+    if (confidenceElement) {
+
+        confidenceElement.textContent =
+            formatPercent(
+                confidence
+            );
+
+    }
+
+
+    const agreementElement =
+        getElement(
+            "analysisAgreement"
+        );
+
+
+    if (agreementElement) {
+
+        agreementElement.textContent =
+            formatPercent(
+                agreement
+            );
+
+    }
+
+
+    const latencyElement =
+        getElement(
+            "analysisLatency"
+        );
+
+
+    if (latencyElement) {
+
+        latencyElement.textContent =
+            `${formatDecimal(
+                latency,
+                1
+            )}h`;
+
+    }
 
 
     const period =
         resumo.periodo || {};
 
 
-    getElement(
-        "periodValue"
-    ).textContent =
-        `${formatDate(period.inicio)} — ${formatDate(period.fim)}`;
-
-
-    getElement(
-        "narrativeCount"
-    ).textContent =
-        firstDefined(
-            resumo.quantidadeNarrativas,
-            data.narrativas?.length,
-            "—"
+    const periodValue =
+        getElement(
+            "periodValue"
         );
 
 
-    getElement(
-        "generatedAt"
-    ).textContent =
-        formatDateTime(
-            data.geradoEm
+    if (periodValue) {
+
+        periodValue.textContent =
+
+            `${formatDate(
+                period.inicio
+            )} — ${formatDate(
+                period.fim
+            )}`;
+
+    }
+
+
+    const narrativeCount =
+        getElement(
+            "narrativeCount"
         );
 
 
-    getElement(
-        "footerGeneratedAt"
-    ).textContent =
-        formatDateTime(
-            data.geradoEm
+    if (narrativeCount) {
+
+        narrativeCount.textContent =
+            firstDefined(
+
+                resumo.quantidadeNarrativas,
+
+                data.narrativas
+                    ?.length,
+
+                "—"
+
+            );
+
+    }
+
+
+    const generatedAt =
+        getElement(
+            "generatedAt"
         );
 
 
-    getElement(
-        "analysisUpdate"
-    ).textContent =
-        `Atualizado ${formatDateTime(data.geradoEm)}`;
+    if (generatedAt) {
+
+        generatedAt.textContent =
+            formatDateTime(
+                data.geradoEm
+            );
+
+    }
+
+
+    const footerGeneratedAt =
+        getElement(
+            "footerGeneratedAt"
+        );
+
+
+    if (footerGeneratedAt) {
+
+        footerGeneratedAt.textContent =
+            formatDateTime(
+                data.geradoEm
+            );
+
+    }
+
+
+    const analysisUpdate =
+        getElement(
+            "analysisUpdate"
+        );
+
+
+    if (analysisUpdate) {
+
+        analysisUpdate.textContent =
+
+            `Atualizado ${
+                formatDateTime(
+                    data.geradoEm
+                )
+            }`;
+
+    }
 
 }
 
@@ -689,7 +879,9 @@ function renderNarrativeDistribution(data) {
     const labels =
         narratives.map(
             item =>
-                narrativeLabel(item.key)
+                narrativeLabel(
+                    item.key
+                )
         );
 
 
@@ -703,7 +895,9 @@ function renderNarrativeDistribution(data) {
     const colors =
         narratives.map(
             item =>
-                narrativeColor(item.key)
+                narrativeColor(
+                    item.key
+                )
         );
 
 
@@ -715,41 +909,73 @@ function renderNarrativeDistribution(data) {
         );
 
 
-    getElement(
-        "donutTotal"
-    ).textContent =
-        formatNumber(total);
+    const donutTotal =
+        getElement(
+            "donutTotal"
+        );
+
+
+    if (donutTotal) {
+
+        donutTotal.textContent =
+            formatNumber(total);
+
+    }
 
 
     renderChart(
+
         "narrativeDistributionChart",
+
         "doughnut",
+
         {
+
             labels,
+
             datasets: [
+
                 {
-                    data: values,
+
+                    data:
+                        values,
+
                     backgroundColor:
                         colors,
+
                     borderColor:
                         "#101620",
+
                     borderWidth:
                         3,
+
                     hoverOffset:
                         7
+
                 }
+
             ]
+
         },
+
         {
+
             cutout:
                 "74%",
+
             plugins: {
+
                 legend: {
+
                     display:
                         false
+
                 }
+
             }
+
         }
+
     );
 
 
@@ -759,35 +985,48 @@ function renderNarrativeDistribution(data) {
         );
 
 
-    legend.innerHTML =
-        narratives
-            .map(item => {
+    if (legend) {
 
-                return `
+        legend.innerHTML =
 
-                    <div class="legend-item">
+            narratives
 
-                        <span
-                            class="legend-color"
-                            style="
-                                background:${narrativeColor(item.key)}
-                            "
-                        ></span>
+                .map(item => {
 
-                        <span class="legend-name">
-                            ${narrativeLabel(item.key)}
-                        </span>
+                    return `
 
-                        <strong class="legend-value">
-                            ${formatNumber(item.total)}
-                        </strong>
+                        <div class="legend-item">
 
-                    </div>
+                            <span
+                                class="legend-color"
+                                style="
+                                    background:${narrativeColor(
+                                        item.key
+                                    )}
+                                "
+                            ></span>
 
-                `;
+                            <span class="legend-name">
+                                ${narrativeLabel(
+                                    item.key
+                                )}
+                            </span>
 
-            })
-            .join("");
+                            <strong class="legend-value">
+                                ${formatNumber(
+                                    item.total
+                                )}
+                            </strong>
+
+                        </div>
+
+                    `;
+
+                })
+
+                .join("");
+
+    }
 
 
     renderRanking(
@@ -801,7 +1040,9 @@ function renderNarrativeDistribution(data) {
    RANKING
    ============================================================ */
 
-function renderRanking(narratives) {
+function renderRanking(
+    narratives
+) {
 
     const container =
         getElement(
@@ -809,11 +1050,21 @@ function renderRanking(narratives) {
         );
 
 
+    if (!container) {
+
+        return;
+
+    }
+
+
     if (!narratives.length) {
 
         container.innerHTML =
+
             `<div class="loading-state">
+
                 Nenhuma narrativa disponível.
+
             </div>`;
 
         return;
@@ -834,25 +1085,45 @@ function renderRanking(narratives) {
 
 
     container.innerHTML =
+
         sorted
+
             .map(
-                (item, index) => {
+                (
+                    item,
+                    index
+                ) => {
 
                     const width =
-                        (item.total / max) * 100;
+                        (
+                            item.total /
+                            max
+                        ) * 100;
+
 
                     return `
 
                         <div class="ranking-item">
 
                             <span class="ranking-position">
-                                ${String(index + 1).padStart(2, "0")}
+
+                                ${String(
+                                    index + 1
+                                ).padStart(
+                                    2,
+                                    "0"
+                                )}
+
                             </span>
 
                             <div class="ranking-main">
 
                                 <div class="ranking-name">
-                                    ${narrativeLabel(item.key)}
+
+                                    ${narrativeLabel(
+                                        item.key
+                                    )}
+
                                 </div>
 
                                 <div class="ranking-bar">
@@ -868,7 +1139,11 @@ function renderRanking(narratives) {
                             </div>
 
                             <strong class="ranking-value">
-                                ${formatNumber(item.total)}
+
+                                ${formatNumber(
+                                    item.total
+                                )}
+
                             </strong>
 
                         </div>
@@ -877,13 +1152,14 @@ function renderRanking(narratives) {
 
                 }
             )
+
             .join("");
 
 }
 
 
 /* ============================================================
-   EVOLUÇÃO TEMPORAL
+   EVOLUÇÃO TEMPORAL DAS NARRATIVAS
    ============================================================ */
 
 function renderTemporalEvolution(data) {
@@ -896,25 +1172,170 @@ function renderTemporalEvolution(data) {
             : [];
 
 
+    const chart =
+        getElement(
+            "narrativeEvolutionChart"
+        );
+
+
+    /*
+    |------------------------------------------------------------------
+    | SEM DADOS
+    |------------------------------------------------------------------
+    */
+
     if (!source.length) {
+
+        if (chart) {
+
+            const context =
+                chart.getContext(
+                    "2d"
+                );
+
+            context.clearRect(
+                0,
+                0,
+                chart.width,
+                chart.height
+            );
+
+        }
+
+
+        const current =
+            getElement(
+                "temporalCurrent"
+            );
+
+
+        if (current) {
+
+            current.textContent =
+                "Sem dados";
+
+        }
+
+
+        renderTemporalSummary(
+            []
+        );
+
 
         return;
 
     }
 
 
-    const periods =
-        source.map(
-            item =>
-                firstDefined(
-                    item.periodo,
-                    item.mes,
-                    item.label,
-                    item.data,
-                    `${item.ano || ""}-${item.mesNumero || ""}`
-                )
-        );
+    /*
+    |------------------------------------------------------------------
+    | ORGANIZAÇÃO DOS DADOS TEMPORAIS
+    |------------------------------------------------------------------
+    |
+    | O backend entrega:
+    |
+    | {
+    |     ano: 2026,
+    |     mes: 8,
+    |     periodo: "2026-08",
+    |     narrativa: "market",
+    |     total: 5510
+    | }
+    |
+    | Portanto, agrupamos primeiro por período.
+    |
+    */
 
+    const periodMap =
+        new Map();
+
+
+    source.forEach(
+        item => {
+
+            const period =
+                firstDefined(
+
+                    item.periodo,
+
+                    item.data,
+
+                    item.label
+
+                );
+
+
+            const narrative =
+                firstDefined(
+
+                    item.narrativa,
+
+                    item.narrative,
+
+                    item.narrativeML
+
+                );
+
+
+            const total =
+                getTotal(item);
+
+
+            if (
+                !period ||
+                !narrative
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                !periodMap.has(
+                    period
+                )
+            ) {
+
+                periodMap.set(
+                    period,
+                    {}
+                );
+
+            }
+
+
+            const periodData =
+                periodMap.get(
+                    period
+                );
+
+
+            periodData[narrative] =
+                total;
+
+        }
+    );
+
+
+    /*
+    |------------------------------------------------------------------
+    | PERÍODOS
+    |------------------------------------------------------------------
+    */
+
+    const periods =
+        Array.from(
+            periodMap.keys()
+        )
+        .sort();
+
+
+    /*
+    |------------------------------------------------------------------
+    | DATASETS DAS NARRATIVAS
+    |------------------------------------------------------------------
+    */
 
     const narrativeKeys =
         Object.keys(
@@ -927,53 +1348,18 @@ function renderTemporalEvolution(data) {
             key => {
 
                 const values =
-                    source.map(
-                        item => {
+                    periods.map(
+                        period => {
 
-                            const narratives =
-                                firstDefined(
-                                    item.narrativas,
-                                    item.narrative,
-                                    item.categorias,
-                                    {}
-                                );
-
-
-                            if (
-                                Array.isArray(
-                                    narratives
-                                ))
-                            {
-
-                                const found =
-                                    narratives.find(
-                                        element =>
-                                            getNarrative(element)
-                                            === key
-                                    );
-
-                                return found
-                                    ? getTotal(found)
-                                    : 0;
-
-                            }
-
-
-                            if (
-                                narratives
-                                &&
-                                typeof narratives === "object"
-                            ) {
-
-                                return numberValue(
-                                    narratives[key]
-                                );
-
-                            }
+                            const periodData =
+                                periodMap.get(
+                                    period
+                                )
+                                || {};
 
 
                             return numberValue(
-                                item[key]
+                                periodData[key]
                             );
 
                         }
@@ -995,7 +1381,7 @@ function renderTemporalEvolution(data) {
                         "transparent",
 
                     pointRadius:
-                        1.8,
+                        2,
 
                     pointHoverRadius:
                         5,
@@ -1004,7 +1390,10 @@ function renderTemporalEvolution(data) {
                         1.7,
 
                     tension:
-                        .35
+                        0.35,
+
+                    spanGaps:
+                        true
 
                 };
 
@@ -1012,59 +1401,99 @@ function renderTemporalEvolution(data) {
         );
 
 
+    /*
+    |------------------------------------------------------------------
+    | GRÁFICO TEMPORAL
+    |------------------------------------------------------------------
+    */
+
     renderChart(
+
         "narrativeEvolutionChart",
+
         "line",
+
         {
+
             labels:
                 periods,
+
             datasets
+
         },
+
         {
+
             interaction: {
+
                 mode:
                     "index",
+
                 intersect:
                     false
+
             },
+
             plugins: {
+
                 legend: {
+
                     position:
                         "bottom",
+
                     labels: {
+
                         color:
                             "#8c97a8",
+
                         font: {
+
                             size:
                                 9
+
                         },
+
                         boxWidth:
                             8,
+
                         boxHeight:
                             8,
+
                         padding:
                             15
+
                     }
+
                 }
+
             },
+
             scales: {
 
                 x: {
 
                     grid: {
+
                         color:
                             "rgba(255,255,255,.035)"
+
                     },
 
                     ticks: {
+
                         color:
                             "#657184",
+
                         font: {
+
                             size:
                                 8
+
                         },
+
                         maxRotation:
                             0
+
                     }
 
                 },
@@ -1075,17 +1504,24 @@ function renderTemporalEvolution(data) {
                         true,
 
                     grid: {
+
                         color:
                             "rgba(255,255,255,.035)"
+
                     },
 
                     ticks: {
+
                         color:
                             "#657184",
+
                         font: {
+
                             size:
                                 8
+
                         }
+
                     }
 
                 }
@@ -1093,28 +1529,71 @@ function renderTemporalEvolution(data) {
             }
 
         }
+
     );
 
 
-    const last =
-        source[
-            source.length - 1
+    /*
+    |------------------------------------------------------------------
+    | PERÍODO MAIS RECENTE
+    |------------------------------------------------------------------
+    */
+
+    const lastPeriod =
+        periods[
+            periods.length - 1
         ];
 
 
-    getElement(
-        "temporalCurrent"
-    ).textContent =
-        firstDefined(
-            last?.periodo,
-            last?.mes,
-            last?.label,
-            "—"
+    const temporalCurrent =
+        getElement(
+            "temporalCurrent"
+        );
+
+
+    if (temporalCurrent) {
+
+        temporalCurrent.textContent =
+            lastPeriod || "—";
+
+    }
+
+
+    /*
+    |------------------------------------------------------------------
+    | RESUMO DO ÚLTIMO PERÍODO
+    |------------------------------------------------------------------
+    */
+
+    const latest =
+        periodMap.get(
+            lastPeriod
+        )
+        || {};
+
+
+    const summarySource =
+        Object.entries(
+            latest
+        )
+        .map(
+            ([key, total]) => ({
+
+                periodo:
+                    lastPeriod,
+
+                narrativa:
+                    key,
+
+                total:
+                    total
+
+            })
         );
 
 
     renderTemporalSummary(
-        source
+        summarySource
     );
 
 }
@@ -1124,7 +1603,9 @@ function renderTemporalEvolution(data) {
    RESUMO TEMPORAL
    ============================================================ */
 
-function renderTemporalSummary(source) {
+function renderTemporalSummary(
+    source
+) {
 
     const container =
         getElement(
@@ -1132,7 +1613,18 @@ function renderTemporalSummary(source) {
         );
 
 
-    if (!source.length) {
+    if (!container) {
+
+        return;
+
+    }
+
+
+    if (
+        !Array.isArray(source)
+        ||
+        !source.length
+    ) {
 
         container.innerHTML =
             "";
@@ -1142,47 +1634,34 @@ function renderTemporalSummary(source) {
     }
 
 
-    const latest =
-        source[
-            source.length - 1
-        ];
+    const values =
+        source
 
-
-    const narratives =
-        firstDefined(
-            latest.narrativas,
-            latest.narrative,
-            latest.categorias,
-            {}
-        );
-
-
-    let values = [];
-
-
-    if (
-        narratives &&
-        typeof narratives === "object" &&
-        !Array.isArray(narratives)
-    ) {
-
-        values =
-            Object.entries(
-                narratives
-            )
             .map(
-                ([key, value]) => ({
-                    key,
+                item => ({
+
+                    key:
+                        firstDefined(
+
+                            item.narrativa,
+
+                            item.narrative
+
+                        ),
+
                     total:
-                        numberValue(value)
+                        getTotal(item)
+
                 })
             )
+
             .filter(
                 item =>
-                    item.total > 0
-            );
 
-    }
+                    item.key &&
+                    item.total > 0
+
+            );
 
 
     if (!values.length) {
@@ -1196,34 +1675,48 @@ function renderTemporalSummary(source) {
 
 
     values.sort(
-        (a,b) =>
+        (a, b) =>
             b.total - a.total
     );
 
 
     const top =
-        values.slice(0,3);
+        values.slice(
+            0,
+            3
+        );
 
 
     container.innerHTML =
+
         top
+
             .map(
                 item => `
 
                     <div class="temporal-summary-item">
 
                         <span>
-                            ${narrativeLabel(item.key)}
+
+                            ${narrativeLabel(
+                                item.key
+                            )}
+
                         </span>
 
                         <strong>
-                            ${formatNumber(item.total)}
+
+                            ${formatNumber(
+                                item.total
+                            )}
+
                         </strong>
 
                     </div>
 
                 `
             )
+
             .join("");
 
 }
@@ -1244,7 +1737,9 @@ function renderSentiments(data) {
     const labels =
         sentiments.map(
             item =>
-                sentimentLabel(item.key)
+                sentimentLabel(
+                    item.key
+                )
         );
 
 
@@ -1258,51 +1753,83 @@ function renderSentiments(data) {
     const colors =
         sentiments.map(
             item =>
-                SENTIMENT_COLORS[item.key]
+                SENTIMENT_COLORS[
+                    item.key
+                ]
                 || "#687589"
         );
 
 
     renderChart(
+
         "sentimentDistributionChart",
+
         "doughnut",
+
         {
+
             labels,
+
             datasets: [
+
                 {
+
                     data:
                         values,
+
                     backgroundColor:
                         colors,
+
                     borderColor:
                         "#101620",
+
                     borderWidth:
                         3
+
                 }
+
             ]
+
         },
+
         {
+
             cutout:
                 "65%",
+
             plugins: {
+
                 legend: {
+
                     position:
                         "bottom",
+
                     labels: {
+
                         color:
                             "#8c97a8",
+
                         font: {
+
                             size:
                                 9
+
                         },
+
                         boxWidth:
                             8,
+
                         padding:
                             14
+
                     }
+
                 }
+
             }
+
         }
+
     );
 
 
@@ -1332,8 +1859,17 @@ function renderSentimentSummary(
         );
 
 
+    if (!container) {
+
+        return;
+
+    }
+
+
     container.innerHTML =
+
         sentiments
+
             .map(
                 item => `
 
@@ -1345,17 +1881,26 @@ function renderSentimentSummary(
                     >
 
                         <span>
-                            ${sentimentLabel(item.key)}
+
+                            ${sentimentLabel(
+                                item.key
+                            )}
+
                         </span>
 
                         <strong>
-                            ${formatNumber(item.total)}
+
+                            ${formatNumber(
+                                item.total
+                            )}
+
                         </strong>
 
                     </div>
 
                 `
             )
+
             .join("");
 
 }
@@ -1385,57 +1930,82 @@ function renderNarrativeSentimentMatrix(
 
     const sentiments =
         [
+
             "positive",
+
             "neutral",
+
             "negative"
+
         ];
 
 
     const lookup = {};
 
 
-    source.forEach(item => {
+    source.forEach(
+        item => {
 
-        const narrative =
-            firstDefined(
-                item.narrativa,
-                item.narrative
-            );
+            const narrative =
+                firstDefined(
 
-        const sentiment =
-            firstDefined(
-                item.sentimento,
-                item.sentiment
-            );
+                    item.narrativa,
 
-        if (
-            narrative &&
-            sentiment
-        ) {
+                    item.narrative
+
+                );
+
+
+            const sentiment =
+                firstDefined(
+
+                    item.sentimento,
+
+                    item.sentiment
+
+                );
+
 
             if (
-                !lookup[narrative]
+                narrative &&
+                sentiment
             ) {
 
-                lookup[narrative] = {};
+                if (
+                    !lookup[narrative]
+                ) {
+
+                    lookup[narrative] =
+                        {};
+
+                }
+
+
+                lookup[narrative][
+                    sentiment
+                ] =
+                    getTotal(item);
 
             }
 
-            lookup[narrative][sentiment] =
-                getTotal(item);
-
         }
-
-    });
+    );
 
 
     renderMatrix(
+
         "narrativeSentimentMatrix",
+
         narratives,
+
         sentiments,
+
         lookup,
+
         narrativeLabel,
+
         sentimentLabel
+
     );
 
 }
@@ -1463,71 +2033,101 @@ function renderCoinMatrix(data) {
 
     const coins =
         [
+
             ...new Set(
+
                 source
+
                     .map(
                         item =>
                             firstDefined(
+
                                 item.moeda,
+
                                 item.coin,
+
                                 item.ativo
+
                             )
                     )
+
                     .filter(Boolean)
+
             )
+
         ]
+
         .sort();
 
 
     const lookup = {};
 
 
-    source.forEach(item => {
+    source.forEach(
+        item => {
 
-        const narrative =
-            firstDefined(
-                item.narrativa,
-                item.narrative
-            );
+            const narrative =
+                firstDefined(
 
-        const coin =
-            firstDefined(
-                item.moeda,
-                item.coin,
-                item.ativo
-            );
+                    item.narrativa,
+
+                    item.narrative
+
+                );
 
 
-        if (
-            narrative &&
-            coin
-        ) {
+            const coin =
+                firstDefined(
+
+                    item.moeda,
+
+                    item.coin,
+
+                    item.ativo
+
+                );
+
 
             if (
-                !lookup[narrative]
+                narrative &&
+                coin
             ) {
 
-                lookup[narrative] = {};
+                if (
+                    !lookup[narrative]
+                ) {
+
+                    lookup[narrative] =
+                        {};
+
+                }
+
+
+                lookup[narrative][coin] =
+                    getTotal(item);
 
             }
 
-            lookup[narrative][coin] =
-                getTotal(item);
-
         }
-
-    });
+    );
 
 
     renderMatrix(
+
         "narrativeCoinMatrix",
+
         narratives,
+
         coins,
+
         lookup,
+
         narrativeLabel,
+
         value =>
             String(value)
                 .toUpperCase()
+
     );
 
 }
@@ -1538,12 +2138,19 @@ function renderCoinMatrix(data) {
    ============================================================ */
 
 function renderMatrix(
+
     containerId,
+
     rows,
+
     columns,
+
     lookup,
+
     rowFormatter,
+
     columnFormatter
+
 ) {
 
     const container =
@@ -1552,13 +2159,23 @@ function renderMatrix(
         );
 
 
+    if (!container) {
+
+        return;
+
+    }
+
+
     if (
         !columns.length
     ) {
 
         container.innerHTML =
+
             `<div class="loading-state">
+
                 Nenhuma associação disponível.
+
             </div>`;
 
         return;
@@ -1579,12 +2196,21 @@ function renderMatrix(
                     </th>
 
                     ${columns
+
                         .map(
-                            column =>
-                                `<th>
-                                    ${columnFormatter(column)}
-                                </th>`
+                            column => `
+
+                                <th>
+
+                                    ${columnFormatter(
+                                        column
+                                    )}
+
+                                </th>
+
+                            `
                         )
+
                         .join("")}
 
                 </tr>
@@ -1596,62 +2222,81 @@ function renderMatrix(
     `;
 
 
-    rows.forEach(row => {
+    rows.forEach(
+        row => {
 
-        html += `
+            html += `
 
-            <tr>
+                <tr>
 
-                <td>
-                    ${rowFormatter(row)}
-                </td>
+                    <td>
 
-        `;
+                        ${rowFormatter(
+                            row
+                        )}
+
+                    </td>
+
+            `;
 
 
-        columns.forEach(column => {
+            columns.forEach(
+                column => {
 
-            const value =
-                numberValue(
-                    lookup[row]?.[column]
-                );
+                    const value =
+                        numberValue(
+
+                            lookup[row]
+                            ?.[
+                                column
+                            ]
+
+                        );
+
+
+                    html += `
+
+                        <td
+                            style="
+                                background:
+                                    rgba(
+                                        98,
+                                        141,
+                                        255,
+                                        ${Math.min(
+                                            0.15,
+                                            value / 1000
+                                        )}
+                                    );
+                            "
+                        >
+
+                            <span
+                                class="matrix-number"
+                            >
+
+                                ${formatNumber(
+                                    value
+                                )}
+
+                            </span>
+
+                        </td>
+
+                    `;
+
+                }
+            );
 
 
             html += `
 
-                <td
-                    style="
-                        background:
-                            rgba(
-                                98,
-                                141,
-                                255,
-                                ${Math.min(
-                                    .15,
-                                    value / 1000
-                                )}
-                            );
-                    "
-                >
-
-                    <span class="matrix-number">
-                        ${formatNumber(value)}
-                    </span>
-
-                </td>
+                </tr>
 
             `;
 
-        });
-
-
-        html += `
-
-            </tr>
-
-        `;
-
-    });
+        }
+    );
 
 
     html += `
@@ -1677,67 +2322,147 @@ function renderConfidence(data) {
 
     const confidence =
         firstDefined(
-            data.resumo?.confiancaMedia,
-            data.confianca?.media,
-            data.confianca?.mediaConfianca
+
+            data.resumo
+                ?.confiancaMedia,
+
+            data.confianca
+                ?.media,
+
+            data.confianca
+                ?.mediaConfianca
+
         );
 
 
     const minimum =
         firstDefined(
-            data.confianca?.min,
-            data.confianca?.minima,
-            data.confianca?.minConfidence
+
+            data.confianca
+                ?.min,
+
+            data.confianca
+                ?.minima,
+
+            data.confianca
+                ?.minConfidence
+
         );
 
 
     const maximum =
         firstDefined(
-            data.confianca?.max,
-            data.confianca?.maxima,
-            data.confianca?.maxConfidence
+
+            data.confianca
+                ?.max,
+
+            data.confianca
+                ?.maxima,
+
+            data.confianca
+                ?.maxConfidence
+
         );
 
 
     const total =
         firstDefined(
-            data.confianca?.total,
-            data.resumo?.totalNoticias
+
+            data.confianca
+                ?.total,
+
+            data.resumo
+                ?.totalNoticias
+
         );
 
 
     const confidencePercent =
-        percent(confidence);
+        percent(
+            confidence
+        );
 
 
-    getElement(
-        "confidenceRingValue"
-    ).textContent =
-        `${formatDecimal(confidencePercent,1)}%`;
+    const ringValue =
+        getElement(
+            "confidenceRingValue"
+        );
 
 
-    getElement(
-        "confidenceMin"
-    ).textContent =
-        formatPercent(minimum);
+    if (ringValue) {
+
+        ringValue.textContent =
+
+            `${formatDecimal(
+                confidencePercent,
+                1
+            )}%`;
+
+    }
 
 
-    getElement(
-        "confidenceMax"
-    ).textContent =
-        formatPercent(maximum);
+    const confidenceMin =
+        getElement(
+            "confidenceMin"
+        );
 
 
-    getElement(
-        "confidenceTotal"
-    ).textContent =
-        formatNumber(total);
+    if (confidenceMin) {
+
+        confidenceMin.textContent =
+            formatPercent(
+                minimum
+            );
+
+    }
 
 
-    getElement(
-        "analysisConfidence"
-    ).textContent =
-        formatPercent(confidence);
+    const confidenceMax =
+        getElement(
+            "confidenceMax"
+        );
+
+
+    if (confidenceMax) {
+
+        confidenceMax.textContent =
+            formatPercent(
+                maximum
+            );
+
+    }
+
+
+    const confidenceTotal =
+        getElement(
+            "confidenceTotal"
+        );
+
+
+    if (confidenceTotal) {
+
+        confidenceTotal.textContent =
+            formatNumber(
+                total
+            );
+
+    }
+
+
+    const analysisConfidence =
+        getElement(
+            "analysisConfidence"
+        );
+
+
+    if (analysisConfidence) {
+
+        analysisConfidence.textContent =
+            formatPercent(
+                confidence
+            );
+
+    }
 
 
     const ring =
@@ -1746,19 +2471,29 @@ function renderConfidence(data) {
         );
 
 
-    const degrees =
-        Math.min(
-            360,
-            Math.max(
-                0,
-                confidencePercent * 3.6
-            )
-        );
+    if (ring) {
+
+        const degrees =
+            Math.min(
+
+                360,
+
+                Math.max(
+
+                    0,
+
+                    confidencePercent *
+                    3.6
+
+                )
+
+            );
 
 
-    ring.style.background =
-        `
-            conic-gradient(
+        ring.style.background =
+
+            `conic-gradient(
+
                 var(--blue)
                 0deg
                 ${degrees}deg,
@@ -1766,14 +2501,25 @@ function renderConfidence(data) {
                 rgba(255,255,255,.05)
                 ${degrees}deg
                 360deg
-            )
-        `;
+
+            )`;
+
+    }
 
 
-    getElement(
-        "confidenceInterpretation"
-    ).textContent =
-        "A confiança é apresentada como um indicador relativo associado à classificação do modelo. Ela não deve ser interpretada automaticamente como probabilidade calibrada de acerto.";
+    const interpretation =
+        getElement(
+            "confidenceInterpretation"
+        );
+
+
+    if (interpretation) {
+
+        interpretation.textContent =
+
+            "A confiança é apresentada como um indicador relativo associado à classificação do modelo. Ela não deve ser interpretada automaticamente como probabilidade calibrada de acerto.";
+
+    }
 
 }
 
@@ -1791,75 +2537,144 @@ function renderAgreement(data) {
 
     const agreement =
         firstDefined(
-            agreementData.percentualConcordancia,
-            agreementData.concordancia,
-            agreementData.agreement,
-            agreementData.percentual
+
+            agreementData
+                .percentualConcordancia,
+
+            agreementData
+                .concordancia,
+
+            agreementData
+                .agreement,
+
+            agreementData
+                .percentual
+
         );
 
 
     const agreementPercent =
-        percent(agreement);
+        percent(
+            agreement
+        );
 
 
     const agreementCount =
         firstDefined(
-            agreementData.concordantes,
-            agreementData.agreementCount,
-            agreementData.quantidadeConcordantes
+
+            agreementData
+                .concordantes,
+
+            agreementData
+                .agreementCount,
+
+            agreementData
+                .quantidadeConcordantes
+
         );
 
 
     const divergenceCount =
         firstDefined(
-            agreementData.divergentes,
-            agreementData.divergenceCount,
-            agreementData.quantidadeDivergentes
+
+            agreementData
+                .divergentes,
+
+            agreementData
+                .divergenceCount,
+
+            agreementData
+                .quantidadeDivergentes
+
         );
 
 
-    getElement(
-        "agreementValue"
-    ).textContent =
-        formatPercent(
-            agreementPercent
+    const agreementValue =
+        getElement(
+            "agreementValue"
         );
 
 
-    getElement(
-        "analysisAgreement"
-    ).textContent =
-        formatPercent(
-            agreementPercent
-        );
+    if (agreementValue) {
 
-
-    getElement(
-        "agreementCount"
-    ).textContent =
-        formatNumber(
-            agreementCount
-        );
-
-
-    getElement(
-        "divergenceCount"
-    ).textContent =
-        formatNumber(
-            divergenceCount
-        );
-
-
-    getElement(
-        "agreementBar"
-    ).style.width =
-        `${Math.min(
-            100,
-            Math.max(
-                0,
+        agreementValue.textContent =
+            formatPercent(
                 agreementPercent
-            )
-        )}%`;
+            );
+
+    }
+
+
+    const analysisAgreement =
+        getElement(
+            "analysisAgreement"
+        );
+
+
+    if (analysisAgreement) {
+
+        analysisAgreement.textContent =
+            formatPercent(
+                agreementPercent
+            );
+
+    }
+
+
+    const agreementCountElement =
+        getElement(
+            "agreementCount"
+        );
+
+
+    if (agreementCountElement) {
+
+        agreementCountElement.textContent =
+            formatNumber(
+                agreementCount
+            );
+
+    }
+
+
+    const divergenceCountElement =
+        getElement(
+            "divergenceCount"
+        );
+
+
+    if (divergenceCountElement) {
+
+        divergenceCountElement.textContent =
+            formatNumber(
+                divergenceCount
+            );
+
+    }
+
+
+    const agreementBar =
+        getElement(
+            "agreementBar"
+        );
+
+
+    if (agreementBar) {
+
+        agreementBar.style.width =
+
+            `${Math.min(
+
+                100,
+
+                Math.max(
+                    0,
+                    agreementPercent
+                )
+
+            )}%`;
+
+    }
 
 }
 
@@ -1882,56 +2697,107 @@ function renderLatency(data) {
 
     const minutes =
         firstDefined(
-            summary.latenciaMediaMinutos,
-            latency.mediaMinutos
+
+            summary
+                .latenciaMediaMinutos,
+
+            latency
+                .mediaMinutos
+
         );
 
 
     const hours =
         firstDefined(
-            summary.latenciaMediaHoras,
-            latency.mediaHoras
+
+            summary
+                .latenciaMediaHoras,
+
+            latency
+                .mediaHoras
+
         );
 
 
     const days =
         firstDefined(
-            summary.latenciaMediaDias,
-            latency.mediaDias
+
+            summary
+                .latenciaMediaDias,
+
+            latency
+                .mediaDias
+
         );
 
 
-    getElement(
-        "latencyMinutes"
-    ).textContent =
-        formatDecimal(
-            minutes,
-            1
+    const latencyMinutes =
+        getElement(
+            "latencyMinutes"
         );
 
 
-    getElement(
-        "latencyHours"
-    ).textContent =
-        formatDecimal(
-            hours,
-            2
+    if (latencyMinutes) {
+
+        latencyMinutes.textContent =
+            formatDecimal(
+                minutes,
+                1
+            );
+
+    }
+
+
+    const latencyHours =
+        getElement(
+            "latencyHours"
         );
 
 
-    getElement(
-        "latencyDays"
-    ).textContent =
-        formatDecimal(
-            days,
-            2
+    if (latencyHours) {
+
+        latencyHours.textContent =
+            formatDecimal(
+                hours,
+                2
+            );
+
+    }
+
+
+    const latencyDays =
+        getElement(
+            "latencyDays"
         );
 
 
-    getElement(
-        "analysisLatency"
-    ).textContent =
-        `${formatDecimal(hours,1)}h`;
+    if (latencyDays) {
+
+        latencyDays.textContent =
+            formatDecimal(
+                days,
+                2
+            );
+
+    }
+
+
+    const analysisLatency =
+        getElement(
+            "analysisLatency"
+        );
+
+
+    if (analysisLatency) {
+
+        analysisLatency.textContent =
+
+            `${formatDecimal(
+                hours,
+                1
+            )}h`;
+
+    }
 
 }
 
@@ -1941,10 +2807,15 @@ function renderLatency(data) {
    ============================================================ */
 
 function renderChart(
+
     canvasId,
+
     type,
+
     data,
+
     options = {}
+
 ) {
 
     const canvas =
@@ -1961,7 +2832,9 @@ function renderChart(
 
 
     if (
-        state.charts[canvasId]
+        state.charts[
+            canvasId
+        ]
     ) {
 
         state.charts[
@@ -1981,10 +2854,12 @@ function renderChart(
 
         animation:
             state.animations
+
                 ? {
                     duration:
                         700
                 }
+
                 : false,
 
         plugins: {
@@ -2010,20 +2885,26 @@ function renderChart(
                     10,
 
                 titleFont: {
+
                     size:
                         10
+
                 },
 
                 bodyFont: {
+
                     size:
                         9
+
                 }
 
             },
 
             legend: {
+
                 display:
                     false
+
             }
 
         }
@@ -2033,22 +2914,35 @@ function renderChart(
 
     const merged =
         mergeObjects(
+
             baseOptions,
+
             options
+
         );
 
 
     state.charts[
         canvasId
     ] =
+
         new Chart(
-            canvas.getContext("2d"),
+
+            canvas.getContext(
+                "2d"
+            ),
+
             {
+
                 type,
+
                 data,
+
                 options:
                     merged
+
             }
+
         );
 
 }
@@ -2064,38 +2958,55 @@ function mergeObjects(
 ) {
 
     const output = {
+
         ...target
+
     };
 
 
-    Object.keys(source)
-        .forEach(key => {
+    Object.keys(
+        source
+    )
+        .forEach(
+            key => {
 
-            if (
-                source[key]
-                &&
-                typeof source[key] === "object"
-                &&
-                !Array.isArray(
+                if (
+
                     source[key]
-                )
-            ) {
 
-                output[key] =
-                    mergeObjects(
-                        target[key]
-                        || {},
+                    &&
+
+                    typeof source[key]
+                    === "object"
+
+                    &&
+
+                    !Array.isArray(
                         source[key]
-                    );
+                    )
 
-            } else {
+                ) {
 
-                output[key] =
-                    source[key];
+                    output[key] =
+
+                        mergeObjects(
+
+                            target[key]
+                            || {},
+
+                            source[key]
+
+                        );
+
+                } else {
+
+                    output[key] =
+                        source[key];
+
+                }
 
             }
-
-        });
+        );
 
 
     return output;
@@ -2109,7 +3020,9 @@ function mergeObjects(
 
 async function refreshNarrativeAnalysis() {
 
-    if (state.loading) {
+    if (
+        state.loading
+    ) {
 
         return;
 
@@ -2135,9 +3048,13 @@ async function refreshNarrativeAnalysis() {
 
 
     setStatus(
+
         "Atualizando inteligência",
+
         "Consultando dados reais do núcleo analítico...",
+
         true
+
     );
 
 
@@ -2192,27 +3109,37 @@ async function refreshNarrativeAnalysis() {
 
 
         setStatus(
-            "Sistema operacional",
-            "Análise carregada a partir da API.",
-            true
-        );
 
+            "Sistema operacional",
+
+            "Análise carregada a partir da API.",
+
+            true
+
+        );
 
     } catch (error) {
 
         console.error(
+
             "ERRO NA ANÁLISE:",
+
             error
+
         );
 
 
         setStatus(
-            "Falha na análise",
-            error.message
-                || "Não foi possível consultar a API.",
-            false
-        );
 
+            "Falha na análise",
+
+            error.message
+            ||
+            "Não foi possível consultar a API.",
+
+            false
+
+        );
 
     } finally {
 
@@ -2252,6 +3179,7 @@ function configureAutoRefresh(
             state.autoRefreshTimer
         );
 
+
         state.autoRefreshTimer =
             null;
 
@@ -2261,13 +3189,17 @@ function configureAutoRefresh(
     if (enabled) {
 
         state.autoRefreshTimer =
+
             setInterval(
+
                 () => {
 
                     refreshNarrativeAnalysis();
 
                 },
+
                 120000
+
             );
 
     }
@@ -2286,10 +3218,12 @@ function configureSidebar() {
             "sidebar"
         );
 
+
     const overlay =
         getElement(
             "sidebarOverlay"
         );
+
 
     const mobileButton =
         getElement(
@@ -2300,42 +3234,66 @@ function configureSidebar() {
     if (mobileButton) {
 
         mobileButton.addEventListener(
+
             "click",
+
             () => {
 
-                sidebar.classList.add(
-                    "open"
-                );
+                if (sidebar) {
 
-                overlay.classList.add(
-                    "open"
-                );
+                    sidebar.classList.add(
+                        "open"
+                    );
+
+                }
+
+
+                if (overlay) {
+
+                    overlay.classList.add(
+                        "open"
+                    );
+
+                }
 
             }
+
         );
 
     }
 
 
-    overlay.addEventListener(
-        "click",
-        closeSidebar
-    );
+    if (overlay) {
+
+        overlay.addEventListener(
+
+            "click",
+
+            closeSidebar
+
+        );
+
+    }
 
 
     document
+
         .querySelectorAll(
             ".nav-item[data-scroll]"
         )
+
         .forEach(
             item => {
 
                 item.addEventListener(
+
                     "click",
+
                     () => {
 
                         const target =
                             item.dataset.scroll;
+
 
                         const element =
                             getElement(
@@ -2346,26 +3304,36 @@ function configureSidebar() {
                         if (element) {
 
                             element.scrollIntoView(
+
                                 {
+
                                     behavior:
                                         "smooth",
+
                                     block:
                                         "start"
+
                                 }
+
                             );
 
                         }
 
 
                         document
+
                             .querySelectorAll(
                                 ".nav-item"
                             )
+
                             .forEach(
+
                                 nav =>
+
                                     nav.classList.remove(
                                         "active"
                                     )
+
                             );
 
 
@@ -2377,9 +3345,11 @@ function configureSidebar() {
                         closeSidebar();
 
                     }
+
                 );
 
             }
+
         );
 
 }
@@ -2387,18 +3357,34 @@ function configureSidebar() {
 
 function closeSidebar() {
 
-    getElement(
-        "sidebar"
-    ).classList.remove(
-        "open"
-    );
+    const sidebar =
+        getElement(
+            "sidebar"
+        );
 
 
-    getElement(
-        "sidebarOverlay"
-    ).classList.remove(
-        "open"
-    );
+    const overlay =
+        getElement(
+            "sidebarOverlay"
+        );
+
+
+    if (sidebar) {
+
+        sidebar.classList.remove(
+            "open"
+        );
+
+    }
+
+
+    if (overlay) {
+
+        overlay.classList.remove(
+            "open"
+        );
+
+    }
 
 }
 
@@ -2410,7 +3396,9 @@ function closeSidebar() {
 function openModal(id) {
 
     const modal =
-        getElement(id);
+        getElement(
+            id
+        );
 
 
     if (modal) {
@@ -2427,7 +3415,9 @@ function openModal(id) {
 function closeModal(id) {
 
     const modal =
-        getElement(id);
+        getElement(
+            id
+        );
 
 
     if (modal) {
@@ -2443,43 +3433,70 @@ function closeModal(id) {
 
 function configureModals() {
 
-    getElement(
-        "profileButton"
-    ).addEventListener(
-        "click",
-        () => {
-
-            openModal(
-                "profileModal"
-            );
-
-        }
-    );
+    const profileButton =
+        getElement(
+            "profileButton"
+        );
 
 
-    getElement(
-        "settingsButton"
-    ).addEventListener(
-        "click",
-        () => {
+    if (profileButton) {
 
-            openModal(
-                "settingsModal"
-            );
+        profileButton.addEventListener(
 
-        }
-    );
+            "click",
+
+            () => {
+
+                openModal(
+                    "profileModal"
+                );
+
+            }
+
+        );
+
+    }
+
+
+    const settingsButton =
+        getElement(
+            "settingsButton"
+        );
+
+
+    if (settingsButton) {
+
+        settingsButton.addEventListener(
+
+            "click",
+
+            () => {
+
+                openModal(
+                    "settingsModal"
+                );
+
+            }
+
+        );
+
+    }
 
 
     document
+
         .querySelectorAll(
             "[data-close-modal]"
         )
+
         .forEach(
+
             button => {
 
                 button.addEventListener(
+
                     "click",
+
                     () => {
 
                         closeModal(
@@ -2487,21 +3504,28 @@ function configureModals() {
                         );
 
                     }
+
                 );
 
             }
+
         );
 
 
     document
+
         .querySelectorAll(
             ".modal"
         )
+
         .forEach(
+
             modal => {
 
                 modal.addEventListener(
+
                     "click",
+
                     event => {
 
                         if (
@@ -2515,9 +3539,11 @@ function configureModals() {
                         }
 
                     }
+
                 );
 
             }
+
         );
 
 }
@@ -2544,14 +3570,19 @@ function configureSettings() {
     if (autoRefresh) {
 
         autoRefresh.addEventListener(
+
             "change",
+
             event => {
 
                 configureAutoRefresh(
+
                     event.target.checked
+
                 );
 
             }
+
         );
 
     }
@@ -2560,13 +3591,16 @@ function configureSettings() {
     if (animation) {
 
         animation.addEventListener(
+
             "change",
+
             event => {
 
                 state.animations =
                     event.target.checked;
 
             }
+
         );
 
     }
@@ -2579,7 +3613,9 @@ function configureSettings() {
    ============================================================ */
 
 document.addEventListener(
+
     "DOMContentLoaded",
+
     () => {
 
         configureSidebar();
@@ -2591,4 +3627,5 @@ document.addEventListener(
         refreshNarrativeAnalysis();
 
     }
+
 );
