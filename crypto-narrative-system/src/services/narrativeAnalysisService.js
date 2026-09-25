@@ -2245,12 +2245,37 @@ async function obterHistoricoPreco(
 
     try {
 
+        /*
+        |--------------------------------------------------------------------------
+        | CORREÇÃO DE ALINHAMENTO TEMPORAL
+        |--------------------------------------------------------------------------
+        |
+        | As notícias são analisadas pelo publishedAt.
+        | O CoinGecko, porém, interpreta week/month/60d a partir da
+        | data atual. Como o período das notícias pode ser histórico,
+        | buscamos um histórico amplo e deixamos construirSerieMoeda()
+        | recortar exatamente periodo.inicio -> periodo.fim.
+        |
+        */
+
+        const periodoPreco =
+            "year";
+
+
+        console.log(
+
+            `[PREÇO] ${coinId}: buscando histórico ${periodoPreco} ` +
+            `para análise ${periodoNormalizado}`
+
+        );
+
+
         const resultado =
             await marketService.getCoinHistory(
 
                 coinId,
 
-                configuracao.preco
+                periodoPreco
 
             );
 
