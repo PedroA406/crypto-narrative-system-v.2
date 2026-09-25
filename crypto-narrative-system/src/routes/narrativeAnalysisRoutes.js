@@ -8,7 +8,8 @@ const router =
 
 const {
 
-    getNarrativeAnalysis
+    getNarrativeAnalysis,
+    getGeneralNarrativeAnalysis
 
 } = require(
     "../controllers/narrativeAnalysisController"
@@ -17,18 +18,43 @@ const {
 
 /*
 |--------------------------------------------------------------------------
-| ANÁLISE COMPLETA
+| NARRATIVA × PREÇO
 |--------------------------------------------------------------------------
 |
 | GET
 |
 | /market/narratives/analysis
 |
+| Utilizada pela página:
+|
+| narrative-price.html
+|
 */
 
 router.get(
     "/analysis",
     getNarrativeAnalysis
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| ANÁLISE GERAL DE NARRATIVAS
+|--------------------------------------------------------------------------
+|
+| GET
+|
+| /market/narratives/general
+|
+| Utilizada pela página:
+|
+| narrative-analysis.html
+|
+*/
+
+router.get(
+    "/general",
+    getGeneralNarrativeAnalysis
 );
 
 
