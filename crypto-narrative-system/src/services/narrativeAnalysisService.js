@@ -1,6 +1,13 @@
-const Post = require("../models/Post");
-const Coin = require("../models/Coin");
-const marketService = require("./marketService");
+const Post =
+    require("../models/Post");
+
+
+const Coin =
+    require("../models/Coin");
+
+
+const marketService =
+    require("./marketService");
 
 
 /*
@@ -10,6 +17,7 @@ const marketService = require("./marketService");
 */
 
 const NARRATIVAS = [
+
     "adoption",
     "general",
     "institutional_investment",
@@ -18,15 +26,27 @@ const NARRATIVAS = [
     "regulation",
     "security",
     "technology"
+
 ];
 
+
 const SENTIMENTOS = [
+
     "positive",
     "negative",
     "neutral"
+
 ];
 
-const DEFASAGENS = [1, 3, 7, 14];
+
+const DEFASAGENS = [
+
+    1,
+    3,
+    7,
+    14
+
+];
 
 
 /*
@@ -35,9 +55,473 @@ const DEFASAGENS = [1, 3, 7, 14];
 |--------------------------------------------------------------------------
 */
 
-const PRICE_CACHE_TIME = 5 * 60 * 1000;
+const PRICE_CACHE_TIME =
+    5 * 60 * 1000;
 
-const priceHistoryCache = new Map();
+
+const priceHistoryCache =
+    new Map();
+
+
+/*
+|--------------------------------------------------------------------------
+| PERÍODOS DA ANÁLISE NARRATIVA × PREÇO
+|--------------------------------------------------------------------------
+|
+| 7d  → 7 dias
+| 30d → 30 dias
+| 60d → 60 dias
+|
+| O histórico de preço será buscado somente para o período necessário.
+|
+*/
+
+const PERIODOS_ANALISE = {
+
+    "7d": {
+
+        dias: 7,
+
+        preco: "week"
+
+    },
+
+
+    "30d": {
+
+        dias: 30,
+
+        preco: "month"
+
+    },
+
+
+    "60d": {
+
+        dias: 60,
+
+        preco: "60d"
+
+    }
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZAR PERÍODO
+|--------------------------------------------------------------------------
+*/
+
+function normalizarPeriodoAnalise(
+    periodo
+) {
+
+    const valor =
+        String(
+            periodo || "30d"
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (
+        PERIODOS_ANALISE[
+            valor
+        ]
+    ) {
+
+        return valor;
+
+    }
+
+
+    if (
+
+        valor === "7" ||
+
+        valor === "week" ||
+
+        valor === "7days"
+
+    ) {
+
+        return "7d";
+
+    }
+
+
+    if (
+
+        valor === "30" ||
+
+        valor === "month" ||
+
+        valor === "30days"
+
+    ) {
+
+        return "30d";
+
+    }
+
+
+    if (
+
+        valor === "60" ||
+
+        valor === "60days" ||
+
+        valor === "2months"
+
+    ) {
+
+        return "60d";
+
+    }
+
+
+    return "30d";
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| OBTER QUANTIDADE DE DIAS
+|--------------------------------------------------------------------------
+*/
+
+function obterDiasPeriodo(
+    periodo
+) {
+
+    return PERIODOS_ANALISE[
+
+        normalizarPeriodoAnalise(
+            periodo
+        )
+
+    ].dias;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| OBTER PERÍODO SOLICITADO
+|--------------------------------------------------------------------------
+|
+| O fim do período é baseado na notícia mais recente existente no MongoDB.
+|
+*/
+
+async function obterPeriodoAnalise(
+    periodo
+) {
+
+    const dias =
+        obterDiasPeriodo(
+            periodo
+        );
+
+
+    const resultado =
+        await Post.aggregate([
+
+            {
+
+                $match: {
+
+                    publishedAt: {
+
+                        $ne: null
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id: null,
+
+                    fim: {
+
+                        $max:
+                            "$publishedAt"
+
+                    }
+
+                }
+
+            }
+
+        ]);
+
+
+    if (
+
+        !resultado.length ||
+
+        !resultado[0].fim
+
+    ) {
+
+        return {
+
+            inicio: null,
+
+            fim: null
+
+        };
+
+    }
+
+
+    const fim =
+        new Date(
+            resultado[0].fim
+        );
+
+
+    const inicio =
+        new Date(
+
+            fim.getTime() -
+
+            (
+                dias *
+                24 *
+                60 *
+                60 *
+                1000
+            )
+
+        );
+
+
+    return {
+
+        inicio,
+
+        fim
+
+    };
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZAR ATIVO
+|--------------------------------------------------------------------------
+*/
+
+function normalizarAtivo(
+    valor
+) {
+
+    if (!valor) {
+
+        return "all";
+
+    }
+
+
+    const ativo =
+        String(
+            valor
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (
+
+        !ativo ||
+
+        ativo === "all" ||
+
+        ativo === "todos" ||
+
+        ativo === "todas"
+
+    ) {
+
+        return "all";
+
+    }
+
+
+    return ativo;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| FILTRAR MOEDAS
+|--------------------------------------------------------------------------
+|
+| Aceita:
+|
+| bitcoin
+| BTC
+| ethereum
+| ETH
+|
+*/
+
+function filtrarMoedasPorAtivo(
+    moedas,
+    ativo
+) {
+
+    const ativoNormalizado =
+        normalizarAtivo(
+            ativo
+        );
+
+
+    if (
+        ativoNormalizado === "all"
+    ) {
+
+        return moedas;
+
+    }
+
+
+    return moedas.filter(
+        coin => {
+
+            const coinId =
+                String(
+                    coin.coinId || ""
+                )
+                    .toLowerCase();
+
+
+            const symbol =
+                String(
+                    coin.symbol || ""
+                )
+                    .toLowerCase();
+
+
+            return (
+
+                coinId ===
+                ativoNormalizado
+
+                ||
+
+                symbol ===
+                ativoNormalizado
+
+            );
+
+        }
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| EXECUTAR COM LIMITE DE CONCORRÊNCIA
+|--------------------------------------------------------------------------
+|
+| Evita disparar 10 chamadas externas simultaneamente.
+|
+*/
+
+async function executarComLimite(
+    itens,
+    limite,
+    callback
+) {
+
+    const resultados = [];
+
+
+    let indice = 0;
+
+
+    async function trabalhador() {
+
+        while (true) {
+
+            const atual =
+                indice++;
+
+
+            if (
+                atual >=
+                itens.length
+            ) {
+
+                return;
+
+            }
+
+
+            try {
+
+                resultados[atual] =
+                    await callback(
+                        itens[atual],
+                        atual
+                    );
+
+            } catch (error) {
+
+                resultados[atual] =
+                    null;
+
+            }
+
+        }
+
+    }
+
+
+    const quantidade =
+        Math.min(
+            limite,
+            itens.length
+        );
+
+
+    await Promise.all(
+
+        Array.from(
+
+            {
+
+                length:
+                    quantidade
+
+            },
+
+            () =>
+                trabalhador()
+
+        )
+
+    );
+
+
+    return resultados.filter(
+        Boolean
+    );
+
+}
 
 
 /*
@@ -46,15 +530,30 @@ const priceHistoryCache = new Map();
 |--------------------------------------------------------------------------
 */
 
-function calcularPercentual(valor, total) {
+function calcularPercentual(
+    valor,
+    total
+) {
 
     if (!total) {
+
         return 0;
+
     }
 
+
     return Number(
-        ((valor / total) * 100).toFixed(2)
+
+        (
+            (
+                valor /
+                total
+            ) *
+            100
+        ).toFixed(2)
+
     );
+
 }
 
 
@@ -64,22 +563,44 @@ function calcularPercentual(valor, total) {
 |--------------------------------------------------------------------------
 */
 
-function calcularMedia(valores) {
+function calcularMedia(
+    valores
+) {
 
-    const validos = valores.filter(
-        valor => Number.isFinite(valor)
-    );
+    const validos =
+        valores.filter(
+            valor =>
+                Number.isFinite(
+                    valor
+                )
+        );
+
 
     if (!validos.length) {
+
         return 0;
+
     }
 
+
     return (
+
         validos.reduce(
-            (soma, valor) => soma + valor,
+
+            (
+                soma,
+                valor
+            ) =>
+                soma +
+                valor,
+
             0
-        ) / validos.length
+
+        ) /
+        validos.length
+
     );
+
 }
 
 
@@ -89,87 +610,187 @@ function calcularMedia(valores) {
 |--------------------------------------------------------------------------
 */
 
-function calcularCorrelacao(valoresX, valoresY) {
+function calcularCorrelacao(
+    valoresX,
+    valoresY
+) {
 
     if (
-        !Array.isArray(valoresX) ||
-        !Array.isArray(valoresY) ||
-        valoresX.length !== valoresY.length ||
+
+        !Array.isArray(
+            valoresX
+        ) ||
+
+        !Array.isArray(
+            valoresY
+        ) ||
+
+        valoresX.length !==
+        valoresY.length ||
+
         valoresX.length < 2
+
     ) {
+
         return 0;
+
     }
+
 
     const pares = [];
 
-    for (let i = 0; i < valoresX.length; i++) {
 
-        const x = Number(valoresX[i]);
-        const y = Number(valoresY[i]);
+    for (
+        let i = 0;
+        i < valoresX.length;
+        i++
+    ) {
+
+        const x =
+            Number(
+                valoresX[i]
+            );
+
+
+        const y =
+            Number(
+                valoresY[i]
+            );
+
 
         if (
+
             Number.isFinite(x) &&
+
             Number.isFinite(y)
+
         ) {
+
             pares.push({
+
                 x,
+
                 y
+
             });
+
         }
+
     }
 
-    if (pares.length < 2) {
+
+    if (
+        pares.length < 2
+    ) {
+
         return 0;
+
     }
 
-    const mediaX = calcularMedia(
-        pares.map(par => par.x)
+
+    const mediaX =
+        calcularMedia(
+
+            pares.map(
+                par =>
+                    par.x
+            )
+
+        );
+
+
+    const mediaY =
+        calcularMedia(
+
+            pares.map(
+                par =>
+                    par.y
+            )
+
+        );
+
+
+    let numerador =
+        0;
+
+
+    let somaX =
+        0;
+
+
+    let somaY =
+        0;
+
+
+    pares.forEach(
+        par => {
+
+            const diferencaX =
+                par.x -
+                mediaX;
+
+
+            const diferencaY =
+                par.y -
+                mediaY;
+
+
+            numerador +=
+
+                diferencaX *
+                diferencaY;
+
+
+            somaX +=
+
+                diferencaX *
+                diferencaX;
+
+
+            somaY +=
+
+                diferencaY *
+                diferencaY;
+
+        }
     );
 
-    const mediaY = calcularMedia(
-        pares.map(par => par.y)
-    );
-
-    let numerador = 0;
-    let somaX = 0;
-    let somaY = 0;
-
-    pares.forEach(par => {
-
-        const diferencaX =
-            par.x - mediaX;
-
-        const diferencaY =
-            par.y - mediaY;
-
-        numerador +=
-            diferencaX * diferencaY;
-
-        somaX +=
-            diferencaX * diferencaX;
-
-        somaY +=
-            diferencaY * diferencaY;
-    });
 
     const denominador =
         Math.sqrt(
-            somaX * somaY
+
+            somaX *
+            somaY
+
         );
 
+
     if (
+
         !denominador ||
-        !Number.isFinite(denominador)
+
+        !Number.isFinite(
+            denominador
+        )
+
     ) {
+
         return 0;
+
     }
 
+
     return Number(
+
         (
+
             numerador /
             denominador
+
         ).toFixed(4)
+
     );
+
 }
 
 
@@ -179,32 +800,75 @@ function calcularCorrelacao(valoresX, valoresY) {
 |--------------------------------------------------------------------------
 */
 
-function interpretarCorrelacao(correlacao) {
+function interpretarCorrelacao(
+    correlacao
+) {
 
     const valor =
-        Math.abs(correlacao);
+        Math.abs(
+            correlacao
+        );
 
-    if (valor < 0.10) {
-        return "relação linear muito fraca";
+
+    if (
+        valor < 0.10
+    ) {
+
+        return (
+            "relação linear muito fraca"
+        );
+
     }
 
-    if (valor < 0.30) {
-        return "relação linear fraca";
+
+    if (
+        valor < 0.30
+    ) {
+
+        return (
+            "relação linear fraca"
+        );
+
     }
 
-    if (valor < 0.50) {
-        return "relação linear moderada";
+
+    if (
+        valor < 0.50
+    ) {
+
+        return (
+            "relação linear moderada"
+        );
+
     }
 
-    if (valor < 0.70) {
-        return "relação linear considerável";
+
+    if (
+        valor < 0.70
+    ) {
+
+        return (
+            "relação linear considerável"
+        );
+
     }
 
-    if (valor < 0.90) {
-        return "relação linear forte";
+
+    if (
+        valor < 0.90
+    ) {
+
+        return (
+            "relação linear forte"
+        );
+
     }
 
-    return "relação linear muito forte";
+
+    return (
+        "relação linear muito forte"
+    );
+
 }
 
 
@@ -214,63 +878,103 @@ function interpretarCorrelacao(correlacao) {
 |--------------------------------------------------------------------------
 */
 
-function interpretarDirecao(correlacao) {
+function interpretarDirecao(
+    correlacao
+) {
 
-    if (correlacao > 0.05) {
+    if (
+        correlacao > 0.05
+    ) {
+
         return "positiva";
+
     }
 
-    if (correlacao < -0.05) {
+
+    if (
+        correlacao < -0.05
+    ) {
+
         return "negativa";
+
     }
+
 
     return "próxima de neutra";
+
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| OBTER PERÍODO
+| OBTER PERÍODO COMPLETO
 |--------------------------------------------------------------------------
+|
+| Mantido para a análise geral já existente.
+|
 */
 
 async function obterPeriodo() {
 
-    const periodo = await Post.aggregate([
+    const periodo =
+        await Post.aggregate([
 
-        {
-            $match: {
-                publishedAt: {
-                    $ne: null
-                }
-            }
-        },
+            {
 
-        {
-            $group: {
+                $match: {
 
-                _id: null,
+                    publishedAt: {
 
-                inicio: {
-                    $min: "$publishedAt"
-                },
+                        $ne: null
 
-                fim: {
-                    $max: "$publishedAt"
+                    }
+
                 }
 
+            },
+
+
+            {
+
+                $group: {
+
+                    _id: null,
+
+                    inicio: {
+
+                        $min:
+                            "$publishedAt"
+
+                    },
+
+                    fim: {
+
+                        $max:
+                            "$publishedAt"
+
+                    }
+
+                }
+
             }
-        }
 
-    ]);
+        ]);
 
-    if (!periodo.length) {
+
+    if (
+        !periodo.length
+    ) {
 
         return {
+
             inicio: null,
+
             fim: null
+
         };
+
     }
+
 
     return {
 
@@ -281,6 +985,20 @@ async function obterPeriodo() {
             periodo[0].fim
 
     };
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| TOTAL DE NOTÍCIAS
+|--------------------------------------------------------------------------
+*/
+
+async function obterTotalNoticias() {
+
+    return await Post.countDocuments();
+
 }
 
 
@@ -292,60 +1010,95 @@ async function obterPeriodo() {
 
 async function obterDistribuicaoNarrativas() {
 
-    const resultado = await Post.aggregate([
+    const resultado =
+        await Post.aggregate([
 
-        {
-            $match: {
+            {
 
-                narrativeML: {
-                    $in: NARRATIVAS
+                $match: {
+
+                    narrativeML: {
+
+                        $in:
+                            NARRATIVAS
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id:
+                        "$narrativeML",
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $sort: {
+
+                    total:
+                        -1
+
                 }
 
             }
-        },
 
-        {
-            $group: {
+        ]);
 
-                _id: "$narrativeML",
-
-                total: {
-                    $sum: 1
-                }
-
-            }
-        },
-
-        {
-            $sort: {
-                total: -1
-            }
-        }
-
-    ]);
 
     const total =
         resultado.reduce(
-            (soma, item) =>
-                soma + item.total,
+
+            (
+                soma,
+                item
+            ) =>
+
+                soma +
+                item.total,
+
             0
+
         );
 
-    return resultado.map(item => ({
 
-        narrativa:
-            item._id,
+    return resultado.map(
+        item => ({
 
-        total:
-            item.total,
+            narrativa:
+                item._id,
 
-        percentual:
-            calcularPercentual(
+            total:
                 item.total,
-                total
-            )
 
-    }));
+            percentual:
+                calcularPercentual(
+
+                    item.total,
+
+                    total
+
+                )
+
+        })
+    );
+
 }
 
 
@@ -357,80 +1110,121 @@ async function obterDistribuicaoNarrativas() {
 
 async function obterConfiancaMedia() {
 
-    const resultado = await Post.aggregate([
+    const resultado =
+        await Post.aggregate([
 
-        {
-            $match: {
+            {
 
-                narrativeMLConfidence: {
-                    $gte: 0
+                $match: {
+
+                    narrativeMLConfidence: {
+
+                        $gte:
+                            0
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id:
+                        null,
+
+                    media: {
+
+                        $avg:
+                            "$narrativeMLConfidence"
+
+                    },
+
+                    minimo: {
+
+                        $min:
+                            "$narrativeMLConfidence"
+
+                    },
+
+                    maximo: {
+
+                        $max:
+                            "$narrativeMLConfidence"
+
+                    },
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    }
+
                 }
 
             }
-        },
 
-        {
-            $group: {
+        ]);
 
-                _id: null,
 
-                media: {
-                    $avg:
-                        "$narrativeMLConfidence"
-                },
-
-                minimo: {
-                    $min:
-                        "$narrativeMLConfidence"
-                },
-
-                maximo: {
-                    $max:
-                        "$narrativeMLConfidence"
-                },
-
-                total: {
-                    $sum: 1
-                }
-
-            }
-        }
-
-    ]);
-
-    if (!resultado.length) {
+    if (
+        !resultado.length
+    ) {
 
         return {
 
             media: 0,
+
             minimo: 0,
+
             maximo: 0,
+
             total: 0
 
         };
+
     }
+
 
     return {
 
         media:
             Number(
-                resultado[0].media.toFixed(4)
+
+                resultado[0]
+                    .media
+                    .toFixed(4)
+
             ),
 
         minimo:
             Number(
-                resultado[0].minimo.toFixed(4)
+
+                resultado[0]
+                    .minimo
+                    .toFixed(4)
+
             ),
 
         maximo:
             Number(
-                resultado[0].maximo.toFixed(4)
+
+                resultado[0]
+                    .maximo
+                    .toFixed(4)
+
             ),
 
         total:
-            resultado[0].total
+            resultado[0]
+                .total
 
     };
+
 }
 
 
@@ -442,61 +1236,95 @@ async function obterConfiancaMedia() {
 
 async function obterDistribuicaoSentimentos() {
 
-    const resultado = await Post.aggregate([
+    const resultado =
+        await Post.aggregate([
 
-        {
-            $match: {
+            {
 
-                sentiment: {
-                    $in: SENTIMENTOS
+                $match: {
+
+                    sentiment: {
+
+                        $in:
+                            SENTIMENTOS
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id:
+                        "$sentiment",
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $sort: {
+
+                    total:
+                        -1
+
                 }
 
             }
-        },
 
-        {
-            $group: {
+        ]);
 
-                _id: "$sentiment",
-
-                total: {
-                    $sum: 1
-                }
-
-            }
-        },
-
-        {
-            $sort: {
-                total: -1
-            }
-
-        }
-
-    ]);
 
     const total =
         resultado.reduce(
-            (soma, item) =>
-                soma + item.total,
+
+            (
+                soma,
+                item
+            ) =>
+
+                soma +
+                item.total,
+
             0
+
         );
 
-    return resultado.map(item => ({
 
-        sentimento:
-            item._id,
+    return resultado.map(
+        item => ({
 
-        total:
-            item.total,
+            sentimento:
+                item._id,
 
-        percentual:
-            calcularPercentual(
+            total:
                 item.total,
-                total
-            )
 
-    }));
+            percentual:
+                calcularPercentual(
+
+                    item.total,
+
+                    total
+
+                )
+
+        })
+    );
+
 }
 
 
@@ -508,81 +1336,117 @@ async function obterDistribuicaoSentimentos() {
 
 async function obterEvolucaoTemporal() {
 
-    const resultado = await Post.aggregate([
+    const resultado =
+        await Post.aggregate([
 
-        {
-            $match: {
+            {
 
-                publishedAt: {
-                    $ne: null
-                },
+                $match: {
 
-                narrativeML: {
-                    $in: NARRATIVAS
+                    publishedAt: {
+
+                        $ne:
+                            null
+
+                    },
+
+                    narrativeML: {
+
+                        $in:
+                            NARRATIVAS
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id: {
+
+                        ano: {
+
+                            $year:
+                                "$publishedAt"
+
+                        },
+
+                        mes: {
+
+                            $month:
+                                "$publishedAt"
+
+                        },
+
+                        narrativa:
+                            "$narrativeML"
+
+                    },
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $sort: {
+
+                    "_id.ano":
+                        1,
+
+                    "_id.mes":
+                        1
+
                 }
 
             }
-        },
 
-        {
-            $group: {
+        ]);
 
-                _id: {
 
-                    ano: {
-                        $year:
-                            "$publishedAt"
-                    },
+    return resultado.map(
+        item => ({
 
-                    mes: {
-                        $month:
-                            "$publishedAt"
-                    },
+            ano:
+                item._id.ano,
 
-                    narrativa:
-                        "$narrativeML"
+            mes:
+                item._id.mes,
 
-                },
+            periodo:
 
-                total: {
-                    $sum: 1
-                }
+                `${item._id.ano}-${String(
 
-            }
-        },
+                    item._id.mes
 
-        {
-            $sort: {
+                ).padStart(
 
-                "_id.ano": 1,
-                "_id.mes": 1
+                    2,
+                    "0"
 
-            }
+                )}`,
 
-        }
+            narrativa:
+                item._id.narrativa,
 
-    ]);
+            total:
+                item.total
 
-    return resultado.map(item => ({
+        })
+    );
 
-        ano:
-            item._id.ano,
-
-        mes:
-            item._id.mes,
-
-        periodo:
-            `${item._id.ano}-${String(
-                item._id.mes
-            ).padStart(2, "0")}`,
-
-        narrativa:
-            item._id.narrativa,
-
-        total:
-            item.total
-
-    }));
 }
 
 
@@ -594,66 +1458,90 @@ async function obterEvolucaoTemporal() {
 
 async function obterNarrativaSentimento() {
 
-    const resultado = await Post.aggregate([
+    const resultado =
+        await Post.aggregate([
 
-        {
-            $match: {
+            {
 
-                narrativeML: {
-                    $in: NARRATIVAS
-                },
+                $match: {
 
-                sentiment: {
-                    $in: SENTIMENTOS
+                    narrativeML: {
+
+                        $in:
+                            NARRATIVAS
+
+                    },
+
+                    sentiment: {
+
+                        $in:
+                            SENTIMENTOS
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id: {
+
+                        narrativa:
+                            "$narrativeML",
+
+                        sentimento:
+                            "$sentiment"
+
+                    },
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $sort: {
+
+                    "_id.narrativa":
+                        1,
+
+                    "_id.sentimento":
+                        1
+
                 }
 
             }
-        },
 
-        {
-            $group: {
+        ]);
 
-                _id: {
 
-                    narrativa:
-                        "$narrativeML",
+    return resultado.map(
+        item => ({
 
-                    sentimento:
-                        "$sentiment"
+            narrativa:
+                item._id.narrativa,
 
-                },
+            sentimento:
+                item._id.sentimento,
 
-                total: {
-                    $sum: 1
-                }
+            total:
+                item.total
 
-            }
-        },
+        })
+    );
 
-        {
-            $sort: {
-
-                "_id.narrativa": 1,
-                "_id.sentimento": 1
-
-            }
-
-        }
-
-    ]);
-
-    return resultado.map(item => ({
-
-        narrativa:
-            item._id.narrativa,
-
-        sentimento:
-            item._id.sentimento,
-
-        total:
-            item.total
-
-    }));
 }
 
 
@@ -665,62 +1553,83 @@ async function obterNarrativaSentimento() {
 
 async function obterNarrativaMoeda() {
 
-    const resultado = await Post.aggregate([
+    const resultado =
+        await Post.aggregate([
 
-        {
-            $match: {
+            {
 
-                narrativeML: {
-                    $in: NARRATIVAS
+                $match: {
+
+                    narrativeML: {
+
+                        $in:
+                            NARRATIVAS
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id: {
+
+                        narrativa:
+                            "$narrativeML",
+
+                        moeda:
+                            "$coin"
+
+                    },
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $sort: {
+
+                    "_id.narrativa":
+                        1,
+
+                    total:
+                        -1
+
                 }
 
             }
-        },
 
-        {
-            $group: {
+        ]);
 
-                _id: {
 
-                    narrativa:
-                        "$narrativeML",
+    return resultado.map(
+        item => ({
 
-                    moeda:
-                        "$coin"
+            narrativa:
+                item._id.narrativa,
 
-                },
+            moeda:
+                item._id.moeda,
 
-                total: {
-                    $sum: 1
-                }
+            total:
+                item.total
 
-            }
-        },
+        })
+    );
 
-        {
-            $sort: {
-
-                "_id.narrativa": 1,
-                total: -1
-
-            }
-
-        }
-
-    ]);
-
-    return resultado.map(item => ({
-
-        narrativa:
-            item._id.narrativa,
-
-        moeda:
-            item._id.moeda,
-
-        total:
-            item.total
-
-    }));
 }
 
 
@@ -732,78 +1641,111 @@ async function obterNarrativaMoeda() {
 
 async function obterConcordancia() {
 
-    const resultado = await Post.aggregate([
+    const resultado =
+        await Post.aggregate([
 
-        {
-            $match: {
+            {
 
-                narrative: {
-                    $in: NARRATIVAS
-                },
+                $match: {
 
-                narrativeML: {
-                    $in: NARRATIVAS
+                    narrative: {
+
+                        $in:
+                            NARRATIVAS
+
+                    },
+
+                    narrativeML: {
+
+                        $in:
+                            NARRATIVAS
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id: {
+
+                        original:
+                            "$narrative",
+
+                        ml:
+                            "$narrativeML"
+
+                    },
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $sort: {
+
+                    "_id.original":
+                        1,
+
+                    "_id.ml":
+                        1
+
                 }
 
             }
-        },
 
-        {
-            $group: {
+        ]);
 
-                _id: {
 
-                    original:
-                        "$narrative",
+    let totalComparacoes =
+        0;
 
-                    ml:
-                        "$narrativeML"
 
-                },
+    let totalConcordancias =
+        0;
 
-                total: {
-                    $sum: 1
-                }
 
-            }
-        },
+    resultado.forEach(
+        item => {
 
-        {
-            $sort: {
-
-                "_id.original": 1,
-                "_id.ml": 1
-
-            }
-
-        }
-
-    ]);
-
-    let totalComparacoes = 0;
-
-    let totalConcordancias = 0;
-
-    resultado.forEach(item => {
-
-        totalComparacoes +=
-            item.total;
-
-        if (
-            item._id.original ===
-            item._id.ml
-        ) {
-
-            totalConcordancias +=
+            totalComparacoes +=
                 item.total;
 
-        }
 
-    });
+            if (
+
+                item._id.original ===
+                item._id.ml
+
+            ) {
+
+                totalConcordancias +=
+                    item.total;
+
+            }
+
+        }
+    );
+
 
     const totalDivergencias =
+
         totalComparacoes -
         totalConcordancias;
+
 
     return {
 
@@ -816,32 +1758,44 @@ async function obterConcordancia() {
             totalDivergencias,
 
         percentualConcordancia:
+
             calcularPercentual(
+
                 totalConcordancias,
+
                 totalComparacoes
+
             ),
 
         percentualDivergencia:
+
             calcularPercentual(
+
                 totalDivergencias,
+
                 totalComparacoes
+
             ),
 
         matriz:
-            resultado.map(item => ({
 
-                narrativaOriginal:
-                    item._id.original,
+            resultado.map(
+                item => ({
 
-                narrativaML:
-                    item._id.ml,
+                    narrativaOriginal:
+                        item._id.original,
 
-                total:
-                    item.total
+                    narrativaML:
+                        item._id.ml,
 
-            }))
+                    total:
+                        item.total
+
+                })
+            )
 
     };
+
 }
 
 
@@ -853,165 +1807,223 @@ async function obterConcordancia() {
 
 async function obterLatenciaColeta() {
 
-    const resultado = await Post.aggregate([
+    const resultado =
+        await Post.aggregate([
 
-        {
-            $match: {
+            {
 
-                publishedAt: {
-                    $ne: null
-                },
+                $match: {
 
-                createdAt: {
-                    $ne: null
-                }
+                    publishedAt: {
 
-            }
-        },
+                        $ne:
+                            null
 
-        {
-            $project: {
+                    },
 
-                latenciaMs: {
+                    createdAt: {
 
-                    $subtract: [
-                        "$createdAt",
-                        "$publishedAt"
-                    ]
+                        $ne:
+                            null
+
+                    }
 
                 }
 
-            }
-        },
+            },
 
-        {
-            $match: {
 
-                latenciaMs: {
-                    $gte: 0
+            {
+
+                $project: {
+
+                    latenciaMs: {
+
+                        $subtract: [
+
+                            "$createdAt",
+
+                            "$publishedAt"
+
+                        ]
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $match: {
+
+                    latenciaMs: {
+
+                        $gte:
+                            0
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id:
+                        null,
+
+                    mediaMs: {
+
+                        $avg:
+                            "$latenciaMs"
+
+                    },
+
+                    minimoMs: {
+
+                        $min:
+                            "$latenciaMs"
+
+                    },
+
+                    maximoMs: {
+
+                        $max:
+                            "$latenciaMs"
+
+                    },
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    }
+
                 }
 
             }
-        },
 
-        {
-            $group: {
+        ]);
 
-                _id: null,
 
-                mediaMs: {
-                    $avg:
-                        "$latenciaMs"
-                },
-
-                minimoMs: {
-                    $min:
-                        "$latenciaMs"
-                },
-
-                maximoMs: {
-                    $max:
-                        "$latenciaMs"
-                },
-
-                total: {
-                    $sum: 1
-                }
-
-            }
-        }
-
-    ]);
-
-    if (!resultado.length) {
+    if (
+        !resultado.length
+    ) {
 
         return {
 
             mediaMinutos: 0,
+
             mediaHoras: 0,
+
             mediaDias: 0,
+
             minimoMinutos: 0,
+
             maximoMinutos: 0,
+
             total: 0
 
         };
+
     }
+
 
     const dados =
         resultado[0];
 
+
     return {
 
         mediaMinutos:
+
             Number(
+
                 (
+
                     dados.mediaMs /
                     1000 /
                     60
+
                 ).toFixed(2)
+
             ),
 
+
         mediaHoras:
+
             Number(
+
                 (
+
                     dados.mediaMs /
                     1000 /
                     60 /
                     60
+
                 ).toFixed(2)
+
             ),
 
+
         mediaDias:
+
             Number(
+
                 (
+
                     dados.mediaMs /
                     1000 /
                     60 /
                     60 /
                     24
+
                 ).toFixed(2)
+
             ),
 
+
         minimoMinutos:
+
             Number(
+
                 (
+
                     dados.minimoMs /
                     1000 /
                     60
+
                 ).toFixed(2)
+
             ),
 
+
         maximoMinutos:
+
             Number(
+
                 (
+
                     dados.maximoMs /
                     1000 /
                     60
+
                 ).toFixed(2)
+
             ),
+
 
         total:
             dados.total
 
     };
-}
 
-
-/*
-|--------------------------------------------------------------------------
-| TOTAL DE NOTÍCIAS
-|--------------------------------------------------------------------------
-*/
-
-async function obterTotalNoticias() {
-
-    return await Post.countDocuments({
-
-        narrativeML: {
-            $in: NARRATIVAS
-        }
-
-    });
 }
 
 
@@ -1026,114 +2038,153 @@ async function obterNoticiasDiarias(
     fim
 ) {
 
-    if (!inicio || !fim) {
+    if (
+        !inicio ||
+        !fim
+    ) {
+
         return [];
+
     }
 
-    const resultado = await Post.aggregate([
 
-        {
-            $match: {
+    const resultado =
+        await Post.aggregate([
 
-                publishedAt: {
+            {
 
-                    $gte: inicio,
-                    $lte: fim
+                $match: {
 
-                },
+                    publishedAt: {
 
-                narrativeML: {
-                    $in: NARRATIVAS
-                },
+                        $gte:
+                            inicio,
 
-                sentiment: {
-                    $in: SENTIMENTOS
-                }
-
-            }
-        },
-
-        {
-            $group: {
-
-                _id: {
-
-                    moeda:
-                        "$coin",
-
-                    data: {
-
-                        $dateToString: {
-
-                            format:
-                                "%Y-%m-%d",
-
-                            date:
-                                "$publishedAt"
-
-                        }
+                        $lte:
+                            fim
 
                     },
 
-                    narrativa:
-                        "$narrativeML",
+                    narrativeML: {
 
-                    sentimento:
-                        "$sentiment"
+                        $in:
+                            NARRATIVAS
 
-                },
+                    },
 
-                total: {
-                    $sum: 1
-                },
+                    sentiment: {
 
-                sentimentScoreMedio: {
-                    $avg:
-                        "$sentimentScore"
+                        $in:
+                            SENTIMENTOS
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $group: {
+
+                    _id: {
+
+                        moeda:
+                            "$coin",
+
+                        data: {
+
+                            $dateToString: {
+
+                                format:
+                                    "%Y-%m-%d",
+
+                                date:
+                                    "$publishedAt"
+
+                            }
+
+                        },
+
+                        narrativa:
+                            "$narrativeML",
+
+                        sentimento:
+                            "$sentiment"
+
+                    },
+
+                    total: {
+
+                        $sum:
+                            1
+
+                    },
+
+                    sentimentScoreMedio: {
+
+                        $avg:
+                            "$sentimentScore"
+
+                    }
+
+                }
+
+            },
+
+
+            {
+
+                $sort: {
+
+                    "_id.data":
+                        1
+
                 }
 
             }
-        },
 
-        {
-            $sort: {
+        ]);
 
-                "_id.data": 1
 
-            }
+    return resultado.map(
+        item => ({
 
-        }
+            moeda:
+                String(
+                    item._id.moeda || ""
+                )
+                    .toUpperCase(),
 
-    ]);
+            data:
+                item._id.data,
 
-    return resultado.map(item => ({
+            narrativa:
+                item._id.narrativa,
 
-        moeda:
-            String(
-                item._id.moeda
-            ).toUpperCase(),
+            sentimento:
+                item._id.sentimento,
 
-        data:
-            item._id.data,
+            total:
+                item.total,
 
-        narrativa:
-            item._id.narrativa,
+            sentimentScoreMedio:
 
-        sentimento:
-            item._id.sentimento,
+                Number(
 
-        total:
-            item.total,
+                    (
 
-        sentimentScoreMedio:
-            Number(
-                (
-                    item.sentimentScoreMedio ||
-                    0
-                ).toFixed(2)
-            )
+                        item.sentimentScoreMedio ||
+                        0
 
-    }));
+                    ).toFixed(2)
+
+                )
+
+        })
+    );
+
 }
 
 
@@ -1141,67 +2192,116 @@ async function obterNoticiasDiarias(
 |--------------------------------------------------------------------------
 | HISTÓRICO DE PREÇOS
 |--------------------------------------------------------------------------
+|
+| Agora o cache considera também o período.
+|
 */
 
 async function obterHistoricoPreco(
-    coinId
+    coinId,
+    periodo = "30d"
 ) {
+
+    const periodoNormalizado =
+        normalizarPeriodoAnalise(
+            periodo
+        );
+
+
+    const configuracao =
+        PERIODOS_ANALISE[
+            periodoNormalizado
+        ];
+
+
+    const chaveCache =
+        `${coinId}:${periodoNormalizado}`;
+
 
     const agora =
         Date.now();
 
+
     const cache =
         priceHistoryCache.get(
-            coinId
+            chaveCache
         );
 
+
     if (
+
         cache &&
-        agora - cache.timestamp <
+
+        agora -
+        cache.timestamp <
         PRICE_CACHE_TIME
+
     ) {
 
         return cache.data;
+
     }
+
 
     try {
 
         const resultado =
             await marketService.getCoinHistory(
+
                 coinId,
-                "year"
+
+                configuracao.preco
+
             );
+
 
         const prices =
             resultado?.prices || [];
 
+
         const data =
             prices
-                .map(item => ({
 
-                    timestamp:
-                        Number(item[0]),
+                .map(
+                    item => ({
 
-                    price:
-                        Number(item[1])
+                        timestamp:
+                            Number(
+                                item[0]
+                            ),
 
-                }))
-                .filter(item =>
+                        price:
+                            Number(
+                                item[1]
+                            )
 
-                    Number.isFinite(
-                        item.timestamp
-                    ) &&
+                    })
+                )
 
-                    Number.isFinite(
-                        item.price
-                    ) &&
+                .filter(
+                    item =>
 
-                    item.price > 0
+                        Number.isFinite(
+                            item.timestamp
+                        )
+
+                        &&
+
+                        Number.isFinite(
+                            item.price
+                        )
+
+                        &&
+
+                        item.price > 0
 
                 );
 
+
         priceHistoryCache.set(
-            coinId,
+
+            chaveCache,
+
             {
 
                 timestamp:
@@ -1210,19 +2310,28 @@ async function obterHistoricoPreco(
                 data
 
             }
+
         );
 
+
         return data;
+
 
     } catch (error) {
 
         console.error(
+
             `Erro ao obter histórico de ${coinId}:`,
+
             error.message
+
         );
 
+
         return [];
+
     }
+
 }
 
 
@@ -1239,44 +2348,64 @@ function transformarPrecosDiarios(
     const mapa =
         new Map();
 
-    prices.forEach(item => {
 
-        const data =
-            new Date(
-                item.timestamp
-            )
-                .toISOString()
-                .slice(
-                    0,
-                    10
-                );
+    prices.forEach(
+        item => {
 
-        mapa.set(
-            data,
-            item.price
-        );
+            const data =
+                new Date(
+                    item.timestamp
+                )
+                    .toISOString()
+                    .slice(
+                        0,
+                        10
+                    );
 
-    });
+
+            mapa.set(
+
+                data,
+
+                item.price
+
+            );
+
+        }
+    );
+
 
     return Array.from(
+
         mapa.entries()
+
     )
+
         .map(
+
             ([data, price]) => ({
 
                 data,
 
                 price:
-                    Number(price)
+                    Number(
+                        price
+                    )
 
             })
+
         )
+
         .sort(
+
             (a, b) =>
+
                 a.data.localeCompare(
                     b.data
                 )
+
         );
+
 }
 
 
@@ -1293,106 +2422,149 @@ function criarMapaNoticias(
     const mapa =
         new Map();
 
-    noticias.forEach(noticia => {
 
-        const chave =
-            `${noticia.moeda}|${noticia.data}`;
+    noticias.forEach(
+        noticia => {
 
-        if (!mapa.has(chave)) {
+            const chave =
+                `${noticia.moeda}|${noticia.data}`;
 
-            mapa.set(
-                chave,
-                {
 
-                    totalNoticias: 0,
+            if (
+                !mapa.has(chave)
+            ) {
 
-                    sentimentScoreSoma: 0,
+                mapa.set(
 
-                    sentimentScorePeso: 0,
+                    chave,
 
-                    sentimentos: {
+                    {
 
-                        positive: 0,
-                        negative: 0,
-                        neutral: 0
+                        totalNoticias:
+                            0,
 
-                    },
+                        sentimentScoreSoma:
+                            0,
 
-                    narrativas: {}
+                        sentimentScorePeso:
+                            0,
 
-                }
-            );
-        }
+                        sentimentos: {
 
-        const dia =
-            mapa.get(chave);
+                            positive:
+                                0,
 
-        dia.totalNoticias +=
-            noticia.total;
+                            negative:
+                                0,
 
-        dia.sentimentScoreSoma +=
-            noticia.sentimentScoreMedio *
-            noticia.total;
+                            neutral:
+                                0
 
-        dia.sentimentScorePeso +=
-            noticia.total;
+                        },
 
-        if (
-            dia.sentimentos[
-                noticia.sentimento
-            ] !== undefined
-        ) {
+                        narrativas:
+                            {}
 
-            dia.sentimentos[
-                noticia.sentimento
-            ] +=
+                    }
+
+                );
+
+            }
+
+
+            const dia =
+                mapa.get(
+                    chave
+                );
+
+
+            dia.totalNoticias +=
                 noticia.total;
-        }
 
-        if (
-            !dia.narrativas[
-                noticia.narrativa
-            ]
-        ) {
+
+            dia.sentimentScoreSoma +=
+
+                noticia.sentimentScoreMedio *
+                noticia.total;
+
+
+            dia.sentimentScorePeso +=
+                noticia.total;
+
+
+            if (
+
+                dia.sentimentos[
+                    noticia.sentimento
+                ] !== undefined
+
+            ) {
+
+                dia.sentimentos[
+                    noticia.sentimento
+                ] +=
+                    noticia.total;
+
+            }
+
+
+            if (
+
+                !dia.narrativas[
+                    noticia.narrativa
+                ]
+
+            ) {
+
+                dia.narrativas[
+                    noticia.narrativa
+                ] = {
+
+                    total:
+                        0,
+
+                    sentimentScoreSoma:
+                        0,
+
+                    sentimentScorePeso:
+                        0
+
+                };
+
+            }
+
 
             dia.narrativas[
                 noticia.narrativa
-            ] = {
+            ].total +=
+                noticia.total;
 
-                total: 0,
 
-                sentimentScoreSoma: 0,
+            dia.narrativas[
+                noticia.narrativa
+            ].sentimentScoreSoma +=
 
-                sentimentScorePeso: 0
+                noticia.sentimentScoreMedio *
+                noticia.total;
 
-            };
+
+            dia.narrativas[
+                noticia.narrativa
+            ].sentimentScorePeso +=
+                noticia.total;
+
         }
+    );
 
-        dia.narrativas[
-            noticia.narrativa
-        ].total +=
-            noticia.total;
-
-        dia.narrativas[
-            noticia.narrativa
-        ].sentimentScoreSoma +=
-            noticia.sentimentScoreMedio *
-            noticia.total;
-
-        dia.narrativas[
-            noticia.narrativa
-        ].sentimentScorePeso +=
-            noticia.total;
-
-    });
 
     return mapa;
+
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| CONSTRUIR SÉRIE DE ANÁLISE DA MOEDA
+| CONSTRUIR SÉRIE DA MOEDA
 |--------------------------------------------------------------------------
 */
 
@@ -1409,168 +2581,270 @@ function construirSerieMoeda(
             prices
         );
 
+
     const inicioData =
-        new Date(inicio)
+        new Date(
+            inicio
+        )
             .toISOString()
             .slice(
                 0,
                 10
             );
+
 
     const fimData =
-        new Date(fim)
+        new Date(
+            fim
+        )
             .toISOString()
             .slice(
                 0,
                 10
             );
 
+
     const precosFiltrados =
-        precosDiarios.filter(item =>
-
-            item.data >= inicioData &&
-            item.data <= fimData
-
-        );
-
-    const precoAnterior =
-        precosDiarios.find(
+        precosDiarios.filter(
             item =>
-                item.data <
-                inicioData
+
+                item.data >=
+                inicioData &&
+
+                item.data <=
+                fimData
+
         );
 
-    const serie = [];
 
-    precosFiltrados.forEach(
-        (preco, indice) => {
+    let precoAnterior =
+        null;
+
+
+    const precoAntesInicio =
+        precosDiarios
+            .filter(
+                item =>
+                    item.data <
+                    inicioData
+            );
+
+
+    if (
+        precoAntesInicio.length
+    ) {
+
+        precoAnterior =
+            precoAntesInicio[
+                precoAntesInicio.length - 1
+            ].price;
+
+    }
+
+
+    return precosFiltrados.map(
+        item => {
+
+            const chave =
+                `${symbol}|${item.data}`;
+
 
             const noticia =
                 mapaNoticias.get(
-                    `${symbol}|${preco.data}`
+                    chave
                 ) || {
 
-                    totalNoticias: 0,
+                    totalNoticias:
+                        0,
 
-                    sentimentScoreSoma: 0,
+                    sentimentScoreSoma:
+                        0,
 
-                    sentimentScorePeso: 0,
+                    sentimentScorePeso:
+                        0,
 
                     sentimentos: {
 
-                        positive: 0,
-                        negative: 0,
-                        neutral: 0
+                        positive:
+                            0,
+
+                        negative:
+                            0,
+
+                        neutral:
+                            0
 
                     },
 
-                    narrativas: {}
+                    narrativas:
+                        {}
 
                 };
 
-            let precoBase = null;
-
-            if (indice > 0) {
-
-                precoBase =
-                    precosFiltrados[
-                        indice - 1
-                    ].price;
-
-            } else if (
-                precoAnterior
-            ) {
-
-                precoBase =
-                    precoAnterior.price;
-
-            }
-
-            let retorno = null;
-
-            if (
-                precoBase &&
-                precoBase > 0
-            ) {
-
-                retorno =
-                    (
-                        (
-                            preco.price -
-                            precoBase
-                        ) /
-                        precoBase
-                    ) *
-                    100;
-            }
 
             const sentimentScore =
-                noticia.sentimentScorePeso
-                    ? (
-                        noticia.sentimentScoreSoma /
-                        noticia.sentimentScorePeso
-                    )
-                    : 0;
+
+                noticia.sentimentScorePeso >
+
+                0
+
+                    ?
+
+                    noticia.sentimentScoreSoma /
+                    noticia.sentimentScorePeso
+
+                    :
+
+                    0;
+
+
+            let retornoPercentual =
+                null;
+
+
+            if (
+
+                precoAnterior !== null &&
+
+                precoAnterior > 0
+
+            ) {
+
+                retornoPercentual =
+
+                    (
+
+                        (
+                            item.price -
+                            precoAnterior
+                        ) /
+                        precoAnterior
+
+                    ) * 100;
+
+            }
+
 
             const volatilidade =
-                retorno !== null
-                    ? Math.abs(retorno)
-                    : 0;
 
-            const narrativas =
-                Object.entries(
-                    noticia.narrativas
-                )
-                    .map(
-                        ([nome, dados]) => ({
+                retornoPercentual !== null
 
-                            narrativa:
-                                nome,
+                    ?
+
+                    Math.abs(
+                        retornoPercentual
+                    )
+
+                    :
+
+                    0;
+
+
+            const narrativas = {};
+
+
+            NARRATIVAS.forEach(
+                narrativa => {
+
+                    const dados =
+                        noticia.narrativas[
+                            narrativa
+                        ];
+
+
+                    if (
+                        dados
+                    ) {
+
+                        narrativas[
+                            narrativa
+                        ] = {
 
                             total:
                                 dados.total,
 
+                            intensidade:
+
+                                Number(
+
+                                    (
+                                        dados.total /
+                                        noticia.totalNoticias
+
+                                    ).toFixed(4)
+
+                                ),
+
                             sentimentScore:
-                                dados.sentimentScorePeso
-                                    ? Number(
+
+                                dados.sentimentScorePeso >
+
+                                0
+
+                                    ?
+
+                                    Number(
+
                                         (
+
                                             dados.sentimentScoreSoma /
                                             dados.sentimentScorePeso
-                                        ).toFixed(2)
+
+                                        ).toFixed(4)
+
                                     )
-                                    : 0
 
-                        })
-                    );
+                                    :
 
-            serie.push({
+                                    0
+
+                        };
+
+                    } else {
+
+                        narrativas[
+                            narrativa
+                        ] = {
+
+                            total:
+                                0,
+
+                            intensidade:
+                                0,
+
+                            sentimentScore:
+                                0
+
+                        };
+
+                    }
+
+                }
+            );
+
+
+            precoAnterior =
+                item.price;
+
+
+            return {
 
                 data:
-                    preco.data,
+                    item.data,
 
                 price:
-                    Number(
-                        preco.price.toFixed(8)
-                    ),
+                    item.price,
 
-                retornoPercentual:
-                    retorno === null
-                        ? null
-                        : Number(
-                            retorno.toFixed(4)
-                        ),
+                retornoPercentual,
 
-                volatilidade:
-                    Number(
-                        volatilidade.toFixed(4)
-                    ),
+                volatilidade,
 
                 noticias:
                     noticia.totalNoticias,
 
                 sentimentScore:
                     Number(
-                        sentimentScore.toFixed(2)
+                        sentimentScore.toFixed(4)
                     ),
 
                 sentimentos:
@@ -1578,11 +2852,11 @@ function construirSerieMoeda(
 
                 narrativas
 
-            });
+            };
+
         }
     );
 
-    return serie;
 }
 
 
@@ -1599,90 +2873,118 @@ function analisarSentimentoPreco(
     const dados =
         serie.filter(
             item =>
-                item.retornoPercentual !== null
+
+                item.retornoPercentual !==
+                null
+
         );
 
-    const retorno =
-        dados.map(
-            item =>
-                item.retornoPercentual
-        );
-
-    const sentimento =
-        dados.map(
-            item =>
-                item.sentimentScore
-        );
-
-    const noticias =
-        dados.map(
-            item =>
-                item.noticias
-        );
-
-    const volatilidade =
-        dados.map(
-            item =>
-                item.volatilidade
-        );
 
     const correlacaoSentimentoRetorno =
+
         calcularCorrelacao(
-            sentimento,
-            retorno
+
+            dados.map(
+                item =>
+                    item.sentimentScore
+            ),
+
+            dados.map(
+                item =>
+                    item.retornoPercentual
+            )
+
         );
+
 
     const correlacaoNoticiasRetorno =
+
         calcularCorrelacao(
-            noticias,
-            retorno
+
+            dados.map(
+                item =>
+                    item.noticias
+            ),
+
+            dados.map(
+                item =>
+                    item.retornoPercentual
+            )
+
         );
+
 
     const correlacaoSentimentoVolatilidade =
+
         calcularCorrelacao(
-            sentimento,
-            volatilidade
+
+            dados.map(
+                item =>
+                    item.sentimentScore
+            ),
+
+            dados.map(
+                item =>
+                    item.volatilidade
+            )
+
         );
 
-    return {
 
-        observacoes:
-            dados.length,
+    return {
 
         correlacaoSentimentoRetorno,
 
         interpretacaoSentimentoRetorno:
+
             interpretarCorrelacao(
                 correlacaoSentimentoRetorno
             ),
 
         direcaoSentimentoRetorno:
+
             interpretarDirecao(
                 correlacaoSentimentoRetorno
             ),
 
+
         correlacaoNoticiasRetorno,
 
         interpretacaoNoticiasRetorno:
+
             interpretarCorrelacao(
                 correlacaoNoticiasRetorno
             ),
 
-        correlacaoSentimentoVolatilidade:
-            correlacaoSentimentoVolatilidade,
+        direcaoNoticiasRetorno:
+
+            interpretarDirecao(
+                correlacaoNoticiasRetorno
+            ),
+
+
+        correlacaoSentimentoVolatilidade,
 
         interpretacaoSentimentoVolatilidade:
+
             interpretarCorrelacao(
+                correlacaoSentimentoVolatilidade
+            ),
+
+        direcaoSentimentoVolatilidade:
+
+            interpretarDirecao(
                 correlacaoSentimentoVolatilidade
             )
 
     };
+
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| ANÁLISE NARRATIVA × PREÇO
+| ANÁLISE NARRATIVAS × PREÇO
 |--------------------------------------------------------------------------
 */
 
@@ -1690,183 +2992,235 @@ function analisarNarrativasPreco(
     serie
 ) {
 
-    const resultado = [];
-
-    NARRATIVAS.forEach(
+    return NARRATIVAS.map(
         narrativa => {
 
             const dados =
-                serie
-                    .map(dia => {
+                serie.map(
+                    item => {
 
-                        const narrativaDia =
-                            dia.narrativas.find(
-                                item =>
-                                    item.narrativa ===
-                                    narrativa
-                            );
+                        const dadosNarrativa =
+                            item.narrativas[
+                                narrativa
+                            ];
+
 
                         return {
 
-                            data:
-                                dia.data,
-
                             intensidade:
-                                narrativaDia
-                                    ? narrativaDia.total
-                                    : 0,
-
-                            sentimentScore:
-                                narrativaDia
-                                    ? narrativaDia.sentimentScore
-                                    : 0,
+                                dadosNarrativa
+                                    ?.intensidade ||
+                                0,
 
                             retorno:
-                                dia.retornoPercentual,
+                                item.retornoPercentual,
 
                             volatilidade:
-                                dia.volatilidade
+                                item.volatilidade,
+
+                            sentimento:
+                                dadosNarrativa
+                                    ?.sentimentScore ||
+                                0,
+
+                            noticias:
+                                dadosNarrativa
+                                    ?.total ||
+                                0
 
                         };
 
-                    })
-                    .filter(
-                        item =>
-                            item.retorno !== null
-                    );
-
-            const intensidade =
-                dados.map(
-                    item =>
-                        item.intensidade
+                    }
                 );
 
-            const retornos =
-                dados.map(
+
+            const dadosComRetorno =
+                dados.filter(
                     item =>
-                        item.retorno
+                        item.retorno !==
+                        null
                 );
 
-            const sentimentos =
-                dados.map(
-                    item =>
-                        item.sentimentScore
-                );
-
-            const volatilidades =
-                dados.map(
-                    item =>
-                        item.volatilidade
-                );
 
             const diasComNarrativa =
                 dados.filter(
                     item =>
-                        item.intensidade > 0
+                        item.intensidade >
+                        0
                 );
 
-            const retornosComNarrativa =
-                diasComNarrativa.map(
-                    item =>
-                        item.retorno
+
+            const totalNoticias =
+                dados.reduce(
+
+                    (
+                        soma,
+                        item
+                    ) =>
+
+                        soma +
+                        item.noticias,
+
+                    0
+
                 );
 
-            const volatilidadesComNarrativa =
-                diasComNarrativa.map(
-                    item =>
-                        item.volatilidade
-                );
 
             const mediaRetorno =
                 calcularMedia(
-                    retornosComNarrativa
+
+                    diasComNarrativa.map(
+                        item =>
+                            item.retorno
+                    )
+                        .filter(
+                            valor =>
+                                valor !==
+                                null
+                        )
+
                 );
+
 
             const mediaVolatilidade =
                 calcularMedia(
-                    volatilidadesComNarrativa
+
+                    diasComNarrativa.map(
+                        item =>
+                            item.volatilidade
+                    )
+
                 );
 
-            const correlacaoNarrativaRetorno =
+
+            const correlacaoIntensidadeRetorno =
+
                 calcularCorrelacao(
-                    intensidade,
-                    retornos
+
+                    dadosComRetorno.map(
+                        item =>
+                            item.intensidade
+                    ),
+
+                    dadosComRetorno.map(
+                        item =>
+                            item.retorno
+                    )
+
                 );
 
-            const correlacaoNarrativaVolatilidade =
+
+            const correlacaoIntensidadeVolatilidade =
+
                 calcularCorrelacao(
-                    intensidade,
-                    volatilidades
+
+                    dadosComRetorno.map(
+                        item =>
+                            item.intensidade
+                    ),
+
+                    dadosComRetorno.map(
+                        item =>
+                            item.volatilidade
+                    )
+
                 );
 
-            const correlacaoNarrativaSentimento =
+
+            const correlacaoIntensidadeSentimento =
+
                 calcularCorrelacao(
-                    intensidade,
-                    sentimentos
+
+                    dados.map(
+                        item =>
+                            item.intensidade
+                    ),
+
+                    dados.map(
+                        item =>
+                            item.sentimento
+                    )
+
                 );
 
-            resultado.push({
+
+            return {
 
                 narrativa,
 
                 diasAnalisados:
-                    dados.length,
+                    serie.length,
 
                 diasComNarrativa:
                     diasComNarrativa.length,
 
-                totalNoticias:
-                    intensidade.reduce(
-                        (
-                            soma,
-                            valor
-                        ) =>
-                            soma + valor,
-                        0
-                    ),
+                totalNoticias,
 
-                mediaRetornoQuandoPresente:
+                mediaRetorno:
                     Number(
                         mediaRetorno.toFixed(4)
                     ),
 
-                mediaVolatilidadeQuandoPresente:
+                mediaVolatilidade:
                     Number(
                         mediaVolatilidade.toFixed(4)
                     ),
 
-                correlacaoNarrativaRetorno,
+                correlacaoIntensidadeRetorno,
 
-                correlacaoNarrativaVolatilidade,
+                interpretacaoIntensidadeRetorno:
 
-                correlacaoNarrativaSentimento,
-
-                interpretacaoRetorno:
                     interpretarCorrelacao(
-                        correlacaoNarrativaRetorno
+                        correlacaoIntensidadeRetorno
                     ),
 
-                direcaoRetorno:
+                direcaoIntensidadeRetorno:
+
                     interpretarDirecao(
-                        correlacaoNarrativaRetorno
+                        correlacaoIntensidadeRetorno
+                    ),
+
+
+                correlacaoIntensidadeVolatilidade,
+
+                interpretacaoIntensidadeVolatilidade:
+
+                    interpretarCorrelacao(
+                        correlacaoIntensidadeVolatilidade
+                    ),
+
+                direcaoIntensidadeVolatilidade:
+
+                    interpretarDirecao(
+                        correlacaoIntensidadeVolatilidade
+                    ),
+
+
+                correlacaoIntensidadeSentimento,
+
+                interpretacaoIntensidadeSentimento:
+
+                    interpretarCorrelacao(
+                        correlacaoIntensidadeSentimento
+                    ),
+
+                direcaoIntensidadeSentimento:
+
+                    interpretarDirecao(
+                        correlacaoIntensidadeSentimento
                     )
 
-            });
+            };
 
         }
     );
 
-    return resultado.sort(
-        (a, b) =>
-            b.totalNoticias -
-            a.totalNoticias
-    );
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| ANÁLISE DE DEFASAGEM
+| ANÁLISE DE DEFASAGENS
 |--------------------------------------------------------------------------
 */
 
@@ -1876,105 +3230,133 @@ function analisarDefasagens(
 
     const resultado = [];
 
-    const mapaDias =
-        new Map(
-            serie.map(
-                item =>
-                    [
-                        item.data,
-                        item
-                    ]
-            )
-        );
 
-    NARRATIVAS.forEach(
-        narrativa => {
+    DEFASAGENS.forEach(
+        dias => {
 
-            DEFASAGENS.forEach(
-                lag => {
+            const narrativas = [];
+
+
+            NARRATIVAS.forEach(
+                narrativa => {
 
                     const intensidades = [];
+
                     const retornosFuturos = [];
 
-                    serie.forEach(
-                        dia => {
 
-                            const narrativaDia =
-                                dia.narrativas.find(
-                                    item =>
-                                        item.narrativa ===
-                                        narrativa
-                                );
+                    for (
 
-                            const dataAtual =
-                                new Date(
-                                    `${dia.data}T00:00:00Z`
-                                );
+                        let i = 0;
 
-                            dataAtual.setUTCDate(
-                                dataAtual.getUTCDate() +
-                                lag
-                            );
+                        i <
+                        serie.length - dias;
 
-                            const dataFutura =
-                                dataAtual
-                                    .toISOString()
-                                    .slice(
-                                        0,
-                                        10
-                                    );
+                        i++
 
-                            const diaFuturo =
-                                mapaDias.get(
-                                    dataFutura
-                                );
+                    ) {
 
-                            if (
-                                !diaFuturo ||
-                                diaFuturo.retornoPercentual ===
-                                    null
-                            ) {
+                        const atual =
+                            serie[i];
 
-                                return;
-                            }
 
-                            intensidades.push(
-                                narrativaDia
-                                    ? narrativaDia.total
-                                    : 0
-                            );
+                        const futuro =
+                            serie[
+                                i + dias
+                            ];
 
-                            retornosFuturos.push(
-                                diaFuturo.retornoPercentual
-                            );
 
-                        }
-                    );
+                        const narrativaAtual =
+                            atual.narrativas[
+                                narrativa
+                            ];
 
-                    const correlacao =
-                        calcularCorrelacao(
-                            intensidades,
-                            retornosFuturos
+
+                        intensidades.push(
+
+                            narrativaAtual
+                                ?.intensidade ||
+                            0
+
                         );
 
-                    resultado.push({
+
+                        retornosFuturos.push(
+
+                            futuro.retornoPercentual
+
+                        );
+
+                    }
+
+
+                    const pares = [];
+
+
+                    for (
+
+                        let i = 0;
+
+                        i <
+                        intensidades.length;
+
+                        i++
+
+                    ) {
+
+                        if (
+
+                            retornosFuturos[i] !==
+                            null
+
+                        ) {
+
+                            pares.push({
+
+                                intensidade:
+                                    intensidades[i],
+
+                                retorno:
+                                    retornosFuturos[i]
+
+                            });
+
+                        }
+
+                    }
+
+
+                    const correlacao =
+
+                        calcularCorrelacao(
+
+                            pares.map(
+                                item =>
+                                    item.intensidade
+                            ),
+
+                            pares.map(
+                                item =>
+                                    item.retorno
+                            )
+
+                        );
+
+
+                    narrativas.push({
 
                         narrativa,
-
-                        defasagemDias:
-                            lag,
-
-                        observacoes:
-                            intensidades.length,
 
                         correlacao,
 
                         interpretacao:
+
                             interpretarCorrelacao(
                                 correlacao
                             ),
 
                         direcao:
+
                             interpretarDirecao(
                                 correlacao
                             )
@@ -1984,16 +3366,27 @@ function analisarDefasagens(
                 }
             );
 
+
+            resultado.push({
+
+                dias,
+
+                narrativas
+
+            });
+
         }
     );
 
+
     return resultado;
+
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| ANÁLISE DE VOLATILIDADE DAS NARRATIVAS
+| VOLATILIDADE POR NARRATIVA
 |--------------------------------------------------------------------------
 */
 
@@ -2001,76 +3394,89 @@ function analisarVolatilidadeNarrativas(
     serie
 ) {
 
-    return NARRATIVAS
-        .map(
-            narrativa => {
+    return NARRATIVAS.map(
+        narrativa => {
 
-                const diasComNarrativa =
-                    serie.filter(
-                        dia =>
-                            dia.narrativas.some(
-                                item =>
-                                    item.narrativa ===
-                                        narrativa &&
-                                    item.total > 0
-                            )
+            const dados =
+                serie.filter(
+                    item =>
+
+                        (
+                            item.narrativas[
+                                narrativa
+                            ]?.intensidade ||
+                            0
+                        ) > 0
+
+                );
+
+
+            const volatilidades =
+                dados.map(
+                    item =>
+                        item.volatilidade
+                );
+
+
+            const retornos =
+                dados
+
+                    .map(
+                        item =>
+                            item.retornoPercentual
+                    )
+
+                    .filter(
+                        valor =>
+                            valor !==
+                            null
                     );
 
-                const volatilidades =
-                    diasComNarrativa.map(
-                        dia =>
-                            dia.volatilidade
-                    );
 
-                const retornos =
-                    diasComNarrativa
-                        .map(
-                            dia =>
-                                dia.retornoPercentual
-                        )
-                        .filter(
-                            valor =>
-                                valor !== null
-                        );
+            const mediaVolatilidade =
+                calcularMedia(
+                    volatilidades
+                );
 
-                const mediaVolatilidade =
-                    calcularMedia(
-                        volatilidades
-                    );
 
-                const mediaRetorno =
-                    calcularMedia(
-                        retornos
-                    );
+            const mediaRetorno =
+                calcularMedia(
+                    retornos
+                );
 
-                return {
 
-                    narrativa,
+            return {
 
-                    dias:
-                        diasComNarrativa.length,
+                narrativa,
 
-                    mediaVolatilidade:
-                        Number(
-                            mediaVolatilidade
-                                .toFixed(4)
-                        ),
+                dias:
+                    dados.length,
 
-                    mediaRetorno:
-                        Number(
-                            mediaRetorno
-                                .toFixed(4)
-                        )
+                mediaVolatilidade:
+                    Number(
+                        mediaVolatilidade
+                            .toFixed(4)
+                    ),
 
-                };
+                mediaRetorno:
+                    Number(
+                        mediaRetorno
+                            .toFixed(4)
+                    )
 
-            }
-        )
+            };
+
+        }
+    )
         .sort(
+
             (a, b) =>
+
                 b.mediaVolatilidade -
                 a.mediaVolatilidade
+
         );
+
 }
 
 
@@ -2083,221 +3489,350 @@ function analisarVolatilidadeNarrativas(
 async function obterAnalisePorMoeda(
     moedas,
     noticias,
-    periodo
+    periodo,
+    periodoPreco = "30d"
 ) {
 
     if (
+
         !periodo.inicio ||
+
         !periodo.fim
+
     ) {
 
         return [];
+
     }
+
 
     const mapaNoticias =
         criarMapaNoticias(
             noticias
         );
 
+
     const resultados =
-        await Promise.allSettled(
+        await executarComLimite(
 
-            moedas.map(
-                async coin => {
+            moedas,
 
-                    const symbol =
-                        String(
-                            coin.symbol || ""
-                        ).toUpperCase();
+            3,
 
-                    const prices =
-                        await obterHistoricoPreco(
-                            coin.coinId
-                        );
+            async coin => {
 
-                    const serie =
-                        construirSerieMoeda(
-                            symbol,
-                            prices,
-                            mapaNoticias,
-                            periodo.inicio,
-                            periodo.fim
-                        );
+                const symbol =
 
-                    const dadosComPreco =
-                        serie.filter(
+                    String(
+                        coin.symbol ||
+                        ""
+                    )
+                        .toUpperCase();
+
+
+                const prices =
+
+                    await obterHistoricoPreco(
+
+                        coin.coinId,
+
+                        periodoPreco
+
+                    );
+
+
+                const serie =
+
+                    construirSerieMoeda(
+
+                        symbol,
+
+                        prices,
+
+                        mapaNoticias,
+
+                        periodo.inicio,
+
+                        periodo.fim
+
+                    );
+
+
+                const dadosComPreco =
+
+                    serie.filter(
+
+                        item =>
+                            item.price !==
+                            null
+
+                    );
+
+
+                const analiseSentimento =
+
+                    analisarSentimentoPreco(
+                        serie
+                    );
+
+
+                const analiseNarrativas =
+
+                    analisarNarrativasPreco(
+                        serie
+                    );
+
+
+                const defasagens =
+
+                    analisarDefasagens(
+                        serie
+                    );
+
+
+                const volatilidade =
+
+                    analisarVolatilidadeNarrativas(
+                        serie
+                    );
+
+
+                const totalNoticias =
+
+                    serie.reduce(
+
+                        (
+                            soma,
+                            item
+                        ) =>
+
+                            soma +
+                            item.noticias,
+
+                        0
+
+                    );
+
+
+                const sentimentoMedio =
+
+                    calcularMedia(
+
+                        serie.map(
+
                             item =>
-                                item.price !==
-                                null
-                        );
+                                item.sentimentScore
 
-                    const analiseSentimento =
-                        analisarSentimentoPreco(
-                            serie
-                        );
+                        )
 
-                    const analiseNarrativas =
-                        analisarNarrativasPreco(
-                            serie
-                        );
+                    );
 
-                    const defasagens =
-                        analisarDefasagens(
-                            serie
-                        );
 
-                    const volatilidade =
-                        analisarVolatilidadeNarrativas(
-                            serie
-                        );
+                const retornoMedio =
 
-                    const totalNoticias =
-                        serie.reduce(
-                            (
-                                soma,
-                                item
-                            ) =>
-                                soma +
-                                item.noticias,
-                            0
-                        );
+                    calcularMedia(
 
-                    const sentimentoMedio =
-                        calcularMedia(
-                            serie.map(
+                        serie
+
+                            .map(
+
                                 item =>
-                                    item.sentimentScore
+                                    item.retornoPercentual
+
                             )
-                        );
 
-                    const retornoMedio =
-                        calcularMedia(
-                            serie
-                                .map(
-                                    item =>
-                                        item.retornoPercentual
-                                )
-                                .filter(
-                                    valor =>
-                                        valor !== null
-                                )
-                        );
+                            .filter(
 
-                    const volatilidadeMedia =
-                        calcularMedia(
-                            serie.map(
-                                item =>
-                                    item.volatilidade
+                                valor =>
+                                    valor !==
+                                    null
+
                             )
-                        );
 
-                    const primeiroPreco =
-                        dadosComPreco.length
-                            ? dadosComPreco[0].price
-                            : 0;
+                    );
 
-                    const ultimoPreco =
-                        dadosComPreco.length
-                            ? dadosComPreco[
-                                dadosComPreco.length - 1
-                            ].price
-                            : 0;
 
-                    let variacaoPeriodo = 0;
+                const volatilidadeMedia =
 
-                    if (
-                        primeiroPreco > 0
-                    ) {
+                    calcularMedia(
 
-                        variacaoPeriodo =
+                        serie.map(
+
+                            item =>
+                                item.volatilidade
+
+                        )
+
+                    );
+
+
+                const primeiroPreco =
+
+                    dadosComPreco.length
+
+                        ?
+
+                        dadosComPreco[0].price
+
+                        :
+
+                        0;
+
+
+                const ultimoPreco =
+
+                    dadosComPreco.length
+
+                        ?
+
+                        dadosComPreco[
+                            dadosComPreco.length - 1
+                        ].price
+
+                        :
+
+                        0;
+
+
+                let variacaoPeriodo =
+                    0;
+
+
+                if (
+                    primeiroPreco > 0
+                ) {
+
+                    variacaoPeriodo =
+
+                        (
+
                             (
-                                (
-                                    ultimoPreco -
-                                    primeiroPreco
-                                ) /
+                                ultimoPreco -
                                 primeiroPreco
-                            ) *
-                            100;
-                    }
+                            ) /
 
-                    return {
+                            primeiroPreco
 
-                        coinId:
-                            coin.coinId,
+                        ) *
 
-                        nome:
-                            coin.name,
+                        100;
 
-                        simbolo:
-                            symbol,
-
-                        precoAtual:
-                            Number(
-                                coin.price || 0
-                            ),
-
-                        precoInicialPeriodo:
-                            Number(
-                                primeiroPreco.toFixed(8)
-                            ),
-
-                        precoFinalPeriodo:
-                            Number(
-                                ultimoPreco.toFixed(8)
-                            ),
-
-                        variacaoPeriodo:
-                            Number(
-                                variacaoPeriodo.toFixed(4)
-                            ),
-
-                        totalNoticias,
-
-                        sentimentoMedio:
-                            Number(
-                                sentimentoMedio.toFixed(4)
-                            ),
-
-                        retornoMedioDiario:
-                            Number(
-                                retornoMedio.toFixed(4)
-                            ),
-
-                        volatilidadeMedia:
-                            Number(
-                                volatilidadeMedia.toFixed(4)
-                            ),
-
-                        sentimentoPreco:
-                            analiseSentimento,
-
-                        narrativasPreco:
-                            analiseNarrativas,
-
-                        defasagens,
-
-                        volatilidadeNarrativas:
-                            volatilidade,
-
-                        serieTemporal:
-                            serie
-
-                    };
                 }
-            )
+
+
+                return {
+
+                    coinId:
+                        coin.coinId,
+
+                    nome:
+                        coin.name,
+
+                    simbolo:
+                        symbol,
+
+                    precoAtual:
+
+                        Number(
+                            coin.price ||
+                            0
+                        ),
+
+
+                    precoInicialPeriodo:
+
+                        Number(
+
+                            primeiroPreco
+                                .toFixed(8)
+
+                        ),
+
+
+                    precoFinalPeriodo:
+
+                        Number(
+
+                            ultimoPreco
+                                .toFixed(8)
+
+                        ),
+
+
+                    variacaoPeriodo:
+
+                        Number(
+
+                            variacaoPeriodo
+                                .toFixed(4)
+
+                        ),
+
+
+                    totalNoticias,
+
+
+                    sentimentoMedio:
+
+                        Number(
+
+                            sentimentoMedio
+                                .toFixed(4)
+
+                        ),
+
+
+                    retornoMedioDiario:
+
+                        Number(
+
+                            retornoMedio
+                                .toFixed(4)
+
+                        ),
+
+
+                    volatilidadeMedia:
+
+                        Number(
+
+                            volatilidadeMedia
+                                .toFixed(4)
+
+                        ),
+
+
+                    sentimentoPreco:
+
+                        analiseSentimento,
+
+
+                    narrativasPreco:
+
+                        analiseNarrativas,
+
+
+                    defasagens,
+
+
+                    volatilidadeNarrativas:
+
+                        volatilidade,
+
+
+                    serieTemporal:
+
+                        serie
+
+                };
+
+            }
 
         );
 
-    return resultados
-        .filter(
-            resultado =>
-                resultado.status ===
-                "fulfilled"
-        )
-        .map(
-            resultado =>
-                resultado.value
-        );
+
+    return resultados;
+
 }
 
 
@@ -2311,81 +3846,567 @@ function obterResumoRelacaoPreco(
     analises
 ) {
 
-    if (!analises.length) {
+    if (
+        !analises.length
+    ) {
 
         return {
 
-            moedasAnalisadas: 0,
+            moedasAnalisadas:
+                0,
 
-            totalNoticiasRelacionadas: 0,
+            totalNoticiasRelacionadas:
+                0,
 
-            correlacaoMediaSentimentoRetorno: 0,
+            correlacaoMediaSentimentoRetorno:
+                0,
 
-            correlacaoMediaNoticiasRetorno: 0,
+            correlacaoMediaNoticiasRetorno:
+                0,
 
-            volatilidadeMedia: 0
+            volatilidadeMedia:
+                0
 
         };
+
     }
 
+
     const correlacoesSentimento =
+
         analises.map(
+
             item =>
+
                 item.sentimentoPreco
                     .correlacaoSentimentoRetorno
+
         );
+
 
     const correlacoesNoticias =
+
         analises.map(
+
             item =>
+
                 item.sentimentoPreco
                     .correlacaoNoticiasRetorno
+
         );
 
+
     const volatilidades =
+
         analises.map(
+
             item =>
                 item.volatilidadeMedia
+
         );
+
 
     return {
 
         moedasAnalisadas:
+
             analises.length,
 
+
         totalNoticiasRelacionadas:
+
             analises.reduce(
+
                 (
                     soma,
                     item
                 ) =>
+
                     soma +
                     item.totalNoticias,
+
                 0
+
             ),
+
 
         correlacaoMediaSentimentoRetorno:
+
             Number(
+
                 calcularMedia(
+
                     correlacoesSentimento
+
                 ).toFixed(4)
+
             ),
+
 
         correlacaoMediaNoticiasRetorno:
+
             Number(
+
                 calcularMedia(
+
                     correlacoesNoticias
+
                 ).toFixed(4)
+
             ),
 
+
         volatilidadeMedia:
+
             Number(
+
                 calcularMedia(
+
                     volatilidades
+
                 ).toFixed(4)
+
             )
 
     };
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ANÁLISE OTIMIZADA PARA A PÁGINA NARRATIVA × PREÇO
+|--------------------------------------------------------------------------
+|
+| Esta versão não executa todas as análises históricas da página geral.
+|
+| Ela busca somente:
+|
+| - notícias do período selecionado;
+| - moedas selecionadas;
+| - histórico de preço compatível com o período;
+| - relação narrativa × preço.
+|
+*/
+
+async function obterAnaliseNarrativaPreco(
+
+    periodoSolicitado =
+        "30d",
+
+    ativoSolicitado =
+        "all"
+
+) {
+
+    const periodoChave =
+
+        normalizarPeriodoAnalise(
+
+            periodoSolicitado
+
+        );
+
+
+    const ativo =
+
+        normalizarAtivo(
+
+            ativoSolicitado
+
+        );
+
+
+    console.log(
+
+        "=============================================="
+
+    );
+
+
+    console.log(
+
+        "INICIANDO ANÁLISE NARRATIVA × PREÇO OTIMIZADA"
+
+    );
+
+
+    console.log(
+
+        `Período: ${periodoChave} | Ativo: ${ativo}`
+
+    );
+
+
+    console.log(
+
+        "=============================================="
+
+    );
+
+
+    const periodo =
+
+        await obterPeriodoAnalise(
+
+            periodoChave
+
+        );
+
+
+    if (
+
+        !periodo.inicio ||
+
+        !periodo.fim
+
+    ) {
+
+        return {
+
+            geradoEm:
+                new Date(),
+
+            filtros: {
+
+                periodo:
+                    periodoChave,
+
+                ativo
+
+            },
+
+            resumo: {
+
+                totalNoticias:
+                    0,
+
+                periodo,
+
+                quantidadeNarrativas:
+                    NARRATIVAS.length
+
+            },
+
+            resumoPreco:
+
+                obterResumoRelacaoPreco(
+                    []
+                ),
+
+            sentimentoPreco:
+                [],
+
+            relacaoNarrativaPreco:
+                [],
+
+            volatilidadeNarrativa:
+                [],
+
+            defasagemNarrativa:
+                [],
+
+            analisePorMoeda:
+                []
+
+        };
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NOTÍCIAS DO PERÍODO
+    |--------------------------------------------------------------------------
+    */
+
+    const noticiasDiarias =
+
+        await obterNoticiasDiarias(
+
+            periodo.inicio,
+
+            periodo.fim
+
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MOEDAS
+    |--------------------------------------------------------------------------
+    |
+    | Busca somente os campos necessários.
+    |
+    */
+
+    const moedas =
+
+        await Coin.find()
+
+            .select({
+
+                coinId:
+                    1,
+
+                name:
+                    1,
+
+                symbol:
+                    1,
+
+                price:
+                    1,
+
+                marketCap:
+                    1
+
+            })
+
+            .sort({
+
+                marketCap:
+                    -1
+
+            })
+
+            .lean();
+
+
+    const moedasSelecionadas =
+
+        filtrarMoedasPorAtivo(
+
+            moedas,
+
+            ativo
+
+        );
+
+
+    console.log(
+
+        `Notícias agregadas: ${noticiasDiarias.length}`
+
+    );
+
+
+    console.log(
+
+        `Moedas selecionadas: ${moedasSelecionadas.length}`
+
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ANÁLISE DE PREÇOS
+    |--------------------------------------------------------------------------
+    |
+    | Apenas 3 requisições externas simultâneas.
+    |
+    */
+
+    const analisePorMoeda =
+
+        await obterAnalisePorMoeda(
+
+            moedasSelecionadas,
+
+            noticiasDiarias,
+
+            periodo,
+
+            periodoChave
+
+        );
+
+
+    const resumoPreco =
+
+        obterResumoRelacaoPreco(
+
+            analisePorMoeda
+
+        );
+
+
+    const relacaoNarrativaPreco =
+        [];
+
+
+    const sentimentoPreco =
+        [];
+
+
+    const volatilidadeNarrativa =
+        [];
+
+
+    const defasagemNarrativa =
+        [];
+
+
+    analisePorMoeda.forEach(
+
+        moeda => {
+
+
+            moeda.narrativasPreco.forEach(
+
+                narrativa => {
+
+                    relacaoNarrativaPreco.push({
+
+                        moeda:
+                            moeda.simbolo,
+
+                        nomeMoeda:
+                            moeda.nome,
+
+                        ...narrativa
+
+                    });
+
+                }
+
+            );
+
+
+            sentimentoPreco.push({
+
+                moeda:
+                    moeda.simbolo,
+
+                nomeMoeda:
+                    moeda.nome,
+
+                ...moeda.sentimentoPreco
+
+            });
+
+
+            moeda.volatilidadeNarrativas.forEach(
+
+                item => {
+
+                    volatilidadeNarrativa.push({
+
+                        moeda:
+                            moeda.simbolo,
+
+                        nomeMoeda:
+                            moeda.nome,
+
+                        ...item
+
+                    });
+
+                }
+
+            );
+
+
+            moeda.defasagens.forEach(
+
+                item => {
+
+                    defasagemNarrativa.push({
+
+                        moeda:
+                            moeda.simbolo,
+
+                        nomeMoeda:
+                            moeda.nome,
+
+                        ...item
+
+                    });
+
+                }
+
+            );
+
+        }
+
+    );
+
+
+    const totalNoticias =
+
+        noticiasDiarias.reduce(
+
+            (
+                soma,
+                item
+            ) =>
+
+                soma +
+                Number(
+                    item.total || 0
+                ),
+
+            0
+
+        );
+
+
+    console.log(
+
+        `Moedas analisadas: ${analisePorMoeda.length}`
+
+    );
+
+
+    console.log(
+
+        "ANÁLISE NARRATIVA × PREÇO OTIMIZADA CONCLUÍDA"
+
+    );
+
+
+    return {
+
+        geradoEm:
+            new Date(),
+
+
+        filtros: {
+
+            periodo:
+                periodoChave,
+
+            ativo
+
+        },
+
+
+        resumo: {
+
+            totalNoticias,
+
+            periodo,
+
+            quantidadeNarrativas:
+                NARRATIVAS.length
+
+        },
+
+
+        resumoPreco,
+
+        sentimentoPreco,
+
+        relacaoNarrativaPreco,
+
+        volatilidadeNarrativa,
+
+        defasagemNarrativa,
+
+        analisePorMoeda
+
+    };
+
 }
 
 
@@ -2393,24 +4414,37 @@ function obterResumoRelacaoPreco(
 |--------------------------------------------------------------------------
 | ANÁLISE COMPLETA
 |--------------------------------------------------------------------------
+|
+| Mantida para não quebrar a página de análise geral.
+|
 */
 
 async function obterAnaliseCompleta() {
 
     console.log(
+
         "=============================================="
+
     );
 
+
     console.log(
+
         "INICIANDO ANÁLISE NARRATIVA × PREÇO"
+
     );
 
+
     console.log(
+
         "=============================================="
+
     );
+
 
     const periodo =
         await obterPeriodo();
+
 
     const [
 
@@ -2440,75 +4474,129 @@ async function obterAnaliseCompleta() {
 
         obterTotalNoticias(),
 
+
         obterDistribuicaoNarrativas(),
+
 
         obterConfiancaMedia(),
 
+
         obterDistribuicaoSentimentos(),
+
 
         obterEvolucaoTemporal(),
 
+
         obterNarrativaSentimento(),
+
 
         obterNarrativaMoeda(),
 
+
         obterConcordancia(),
+
 
         obterLatenciaColeta(),
 
+
         obterNoticiasDiarias(
+
             periodo.inicio,
+
             periodo.fim
+
         ),
 
+
         Coin.find()
+
             .sort({
-                marketCap: -1
+
+                marketCap:
+                    -1
+
             })
+
             .lean()
 
     ]);
 
+
     console.log(
+
         `Notícias encontradas: ${totalNoticias}`
+
     );
 
+
     console.log(
+
         `Moedas encontradas: ${moedas.length}`
+
     );
 
+
     console.log(
+
         "Buscando históricos de preços..."
+
     );
+
 
     const analisePorMoeda =
+
         await obterAnalisePorMoeda(
+
             moedas,
+
             noticiasDiarias,
-            periodo
+
+            periodo,
+
+            "30d"
+
         );
+
 
     console.log(
+
         `Moedas analisadas: ${analisePorMoeda.length}`
+
     );
 
+
     const resumoPreco =
+
         obterResumoRelacaoPreco(
+
             analisePorMoeda
+
         );
 
-    const relacaoNarrativaPreco = [];
 
-    const sentimentoPreco = [];
+    const relacaoNarrativaPreco =
+        [];
 
-    const volatilidadeNarrativa = [];
 
-    const defasagemNarrativa = [];
+    const sentimentoPreco =
+        [];
+
+
+    const volatilidadeNarrativa =
+        [];
+
+
+    const defasagemNarrativa =
+        [];
+
 
     analisePorMoeda.forEach(
+
         moeda => {
 
+
             moeda.narrativasPreco.forEach(
+
                 narrativa => {
 
                     relacaoNarrativaPreco.push({
@@ -2524,7 +4612,9 @@ async function obterAnaliseCompleta() {
                     });
 
                 }
+
             );
+
 
             sentimentoPreco.push({
 
@@ -2538,7 +4628,9 @@ async function obterAnaliseCompleta() {
 
             });
 
+
             moeda.volatilidadeNarrativas.forEach(
+
                 item => {
 
                     volatilidadeNarrativa.push({
@@ -2554,9 +4646,12 @@ async function obterAnaliseCompleta() {
                     });
 
                 }
+
             );
 
+
             moeda.defasagens.forEach(
+
                 item => {
 
                     defasagemNarrativa.push({
@@ -2572,27 +4667,40 @@ async function obterAnaliseCompleta() {
                     });
 
                 }
+
             );
 
         }
+
     );
 
+
     console.log(
+
         "=============================================="
+
     );
 
+
     console.log(
+
         "ANÁLISE NARRATIVA × PREÇO CONCLUÍDA"
+
     );
 
+
     console.log(
+
         "=============================================="
+
     );
+
 
     return {
 
         geradoEm:
             new Date(),
+
 
         resumo: {
 
@@ -2617,6 +4725,7 @@ async function obterAnaliseCompleta() {
 
         },
 
+
         confianca: {
 
             media:
@@ -2633,19 +4742,27 @@ async function obterAnaliseCompleta() {
 
         },
 
+
         narrativas,
+
 
         sentimentos,
 
+
         evolucaoTemporal,
+
 
         narrativaSentimento,
 
+
         narrativaMoeda,
+
 
         concordancia,
 
+
         latenciaColeta,
+
 
         /*
         |--------------------------------------------------------------------------
@@ -2655,17 +4772,23 @@ async function obterAnaliseCompleta() {
 
         resumoPreco,
 
+
         sentimentoPreco,
+
 
         relacaoNarrativaPreco,
 
+
         volatilidadeNarrativa,
 
+
         defasagemNarrativa,
+
 
         analisePorMoeda
 
     };
+
 }
 
 
@@ -2677,6 +4800,8 @@ async function obterAnaliseCompleta() {
 
 module.exports = {
 
-    obterAnaliseCompleta
+    obterAnaliseCompleta,
+
+    obterAnaliseNarrativaPreco
 
 };
