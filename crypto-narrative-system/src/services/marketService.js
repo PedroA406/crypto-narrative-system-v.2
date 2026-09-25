@@ -1,8 +1,10 @@
 const Coin =
     require("../models/Coin");
 
+
 const Post =
     require("../models/Post");
+
 
 const axios =
     require("axios");
@@ -10,7 +12,7 @@ const axios =
 
 /* ============================================================
    CONFIGURAÇÃO
-   ============================================================ */
+============================================================ */
 
 
 /*
@@ -18,7 +20,7 @@ const axios =
 | CoinGecko
 |--------------------------------------------------------------------------
 |
-| API utilizada para consultar:
+| API pública utilizada para consultar:
 |
 | - preço atual;
 | - valor de mercado;
@@ -38,7 +40,10 @@ const COINGECKO_API =
 | CACHE DE MERCADO
 |--------------------------------------------------------------------------
 |
-| Evita consultar a CoinGecko toda vez que o Dashboard atualizar.
+| Evita fazer uma requisição à CoinGecko toda vez que o Dashboard
+| atualizar os dados.
+|
+| O Dashboard atualiza a cada 30 segundos.
 |
 */
 
@@ -46,27 +51,71 @@ const MARKET_CACHE_TIME =
     30000;
 
 
-let ultimoUpdateMercado = 0;
+let ultimoUpdateMercado =
+    0;
+
+
+/*
+|--------------------------------------------------------------------------
+| CACHE DE HISTÓRICO
+|--------------------------------------------------------------------------
+|
+| O histórico de preços é utilizado pela análise narrativa × preço.
+|
+| Como várias análises podem solicitar o mesmo histórico, mantemos
+| um pequeno cache em memória.
+|
+| Isso evita chamadas repetidas à CoinGecko durante alguns minutos.
+|
+*/
+
+const HISTORY_CACHE_TIME =
+    5 * 60 * 1000;
+
+
+const historyCache =
+    new Map();
 
 
 /* ============================================================
    GET ALL COINS
-   ============================================================ */
+============================================================ */
+
+
+/*
+|--------------------------------------------------------------------------
+| Busca as moedas
+|--------------------------------------------------------------------------
+|
+| CoinGecko → MongoDB → Dashboard
+|
+| Dessa maneira os preços continuam sendo atualizados sem deixar
+| o Dashboard dependente apenas dos valores antigos do banco.
+|
+*/
 
 async function getAllCoins() {
 
     try {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Verifica se precisamos atualizar
+        |--------------------------------------------------------------------------
+        */
+
         const agora =
             Date.now();
 
+
         const tempoDesdeUltimaAtualizacao =
-            agora - ultimoUpdateMercado;
+            agora -
+            ultimoUpdateMercado;
 
 
         /*
         |--------------------------------------------------------------------------
-        | Atualiza os dados quando o cache expirar
+        | Atualiza somente quando necessário
         |--------------------------------------------------------------------------
         */
 
@@ -75,28 +124,11 @@ async function getAllCoins() {
             MARKET_CACHE_TIME
         ) {
 
-            try {
+            await updateMarketData();
 
-                await updateMarketData();
 
-                ultimoUpdateMercado =
-                    Date.now();
-
-            } catch (marketError) {
-
-                console.log(
-                    "AVISO: não foi possível atualizar o mercado."
-                );
-
-                console.log(
-                    marketError.message
-                );
-
-                console.log(
-                    "O sistema utilizará os dados existentes no MongoDB."
-                );
-
-            }
+            ultimoUpdateMercado =
+                agora;
 
         } else {
 
@@ -109,21 +141,25 @@ async function getAllCoins() {
 
         /*
         |--------------------------------------------------------------------------
-        | Retorna os dados do MongoDB
+        | Retorna as moedas do MongoDB
         |--------------------------------------------------------------------------
         */
 
-        return await Coin
-            .find()
+        return await Coin.find()
             .sort({
-                marketCap: -1
+
+                marketCap:
+                    -1
+
             });
+
 
     } catch (error) {
 
         console.log(
             "ERRO AO BUSCAR MOEDAS:"
         );
+
 
         console.log(
             error.message
@@ -134,15 +170,21 @@ async function getAllCoins() {
         |--------------------------------------------------------------------------
         | FALLBACK
         |--------------------------------------------------------------------------
+        |
+        | Se a CoinGecko estiver indisponível, ainda tentamos entregar
+        | os dados existentes no MongoDB.
+        |
         */
 
         try {
 
             const coins =
-                await Coin
-                    .find()
+                await Coin.find()
                     .sort({
-                        marketCap: -1
+
+                        marketCap:
+                            -1
+
                     });
 
 
@@ -154,15 +196,18 @@ async function getAllCoins() {
                     "MERCADO: utilizando dados existentes no MongoDB."
                 );
 
+
                 return coins;
 
             }
+
 
         } catch (databaseError) {
 
             console.log(
                 "ERRO AO BUSCAR DADOS DO MONGODB:"
             );
+
 
             console.log(
                 databaseError.message
@@ -182,7 +227,17 @@ async function getAllCoins() {
 
 /* ============================================================
    UPDATE MARKET DATA
-   ============================================================ */
+============================================================ */
+
+
+/*
+|--------------------------------------------------------------------------
+| Atualiza os dados de mercado
+|--------------------------------------------------------------------------
+|
+| A CoinGecko permite buscar várias moedas em uma única requisição.
+|
+*/
 
 async function updateMarketData() {
 
@@ -192,9 +247,11 @@ async function updateMarketData() {
             "================================="
         );
 
+
         console.log(
             "ATUALIZANDO DADOS DO MERCADO"
         );
+
 
         console.log(
             "================================="
@@ -203,7 +260,7 @@ async function updateMarketData() {
 
         /*
         |--------------------------------------------------------------------------
-        | Busca moedas cadastradas
+        | Busca moedas existentes
         |--------------------------------------------------------------------------
         */
 
@@ -219,6 +276,7 @@ async function updateMarketData() {
             console.log(
                 "Nenhuma moeda cadastrada no MongoDB."
             );
+
 
             return;
 
@@ -251,6 +309,7 @@ async function updateMarketData() {
                 "Nenhum coinId válido encontrado."
             );
 
+
             return;
 
         }
@@ -264,7 +323,9 @@ async function updateMarketData() {
 
         const response =
             await axios.get(
+
                 `${COINGECKO_API}/coins/markets`,
+
                 {
 
                     params: {
@@ -290,19 +351,10 @@ async function updateMarketData() {
                     },
 
                     timeout:
-                        15000,
-
-                    headers: {
-
-                        "Accept":
-                            "application/json",
-
-                        "User-Agent":
-                            "Crypto-Narrative-System/1.0"
-
-                    }
+                        15000
 
                 }
+
             );
 
 
@@ -348,18 +400,29 @@ async function updateMarketData() {
                 }
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | Localiza a moeda no MongoDB
+                |--------------------------------------------------------------------------
+                */
+
                 const coin =
                     await Coin.findOne({
+
                         coinId:
                             marketCoin.id
+
                     });
 
 
                 if (!coin) {
 
                     console.log(
+
                         `Moeda não encontrada no MongoDB: ${marketCoin.id}`
+
                     );
+
 
                     continue;
 
@@ -368,7 +431,7 @@ async function updateMarketData() {
 
                 /*
                 |--------------------------------------------------------------------------
-                | Dados de mercado
+                | Atualiza dados de mercado
                 |--------------------------------------------------------------------------
                 */
 
@@ -414,21 +477,27 @@ async function updateMarketData() {
 
                 /*
                 |--------------------------------------------------------------------------
-                | Última atualização
+                | Data da atualização
                 |--------------------------------------------------------------------------
                 */
 
                 coin.lastUpdated =
                     marketCoin.last_updated
-                        ? new Date(
+
+                        ?
+
+                        new Date(
                             marketCoin.last_updated
                         )
-                        : new Date();
+
+                        :
+
+                        new Date();
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | IMPORTANTE
+                | Salva no MongoDB
                 |--------------------------------------------------------------------------
                 |
                 | Não alteramos sentimentScore.
@@ -439,14 +508,20 @@ async function updateMarketData() {
 
 
                 console.log(
+
                     `${coin.name} → $${coin.price}`
+
                 );
+
 
             } catch (coinError) {
 
                 console.log(
+
                     `ERRO AO ATUALIZAR ${marketCoin.id}:`
+
                 );
+
 
                 console.log(
                     coinError.message
@@ -461,13 +536,16 @@ async function updateMarketData() {
             "================================="
         );
 
+
         console.log(
             "MERCADO ATUALIZADO COM SUCESSO"
         );
 
+
         console.log(
             "================================="
         );
+
 
     } catch (error) {
 
@@ -475,6 +553,12 @@ async function updateMarketData() {
             "ERRO AO ATUALIZAR MERCADO:"
         );
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Erro HTTP da CoinGecko
+        |--------------------------------------------------------------------------
+        */
 
         if (
             error.response
@@ -484,6 +568,7 @@ async function updateMarketData() {
                 "STATUS:",
                 error.response.status
             );
+
 
             console.log(
                 "RESPOSTA:",
@@ -509,7 +594,14 @@ async function updateMarketData() {
 
 /* ============================================================
    GET COIN BY SYMBOL
-   ============================================================ */
+============================================================ */
+
+
+/*
+|--------------------------------------------------------------------------
+| Busca moeda pelo símbolo
+|--------------------------------------------------------------------------
+*/
 
 async function getCoinBySymbol(
     symbol
@@ -517,7 +609,9 @@ async function getCoinBySymbol(
 
     try {
 
-        if (!symbol) {
+        if (
+            !symbol
+        ) {
 
             return null;
 
@@ -531,11 +625,13 @@ async function getCoinBySymbol(
 
         });
 
+
     } catch (error) {
 
         console.log(
             "ERRO AO BUSCAR MOEDA:"
         );
+
 
         console.log(
             error.message
@@ -553,7 +649,29 @@ async function getCoinBySymbol(
 
 /* ============================================================
    GET COIN HISTORY
-   ============================================================ */
+============================================================ */
+
+
+/*
+|--------------------------------------------------------------------------
+| Busca histórico de preço
+|--------------------------------------------------------------------------
+|
+| Períodos disponíveis:
+|
+| day   → 1 dia
+| week  → 7 dias
+| month → 30 dias
+| 60d   → 60 dias
+| year  → 365 dias
+|
+|--------------------------------------------------------------------------
+|
+| O período 60d foi acrescentado para a nova página:
+|
+| Narrative × Price
+|
+*/
 
 async function getCoinHistory(
     coinId,
@@ -562,7 +680,9 @@ async function getCoinHistory(
 
     try {
 
-        if (!coinId) {
+        if (
+            !coinId
+        ) {
 
             throw new Error(
                 "ID da moeda não informado."
@@ -571,35 +691,179 @@ async function getCoinHistory(
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Períodos aceitos
+        |--------------------------------------------------------------------------
+        */
+
         const periods = {
 
-            day: 1,
+            day:
+                1,
 
-            week: 7,
+            week:
+                7,
 
-            month: 30,
+            month:
+                30,
 
-            year: 365
+            "60d":
+                60,
+
+            year:
+                365
 
         };
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Compatibilidade com nomes alternativos
+        |--------------------------------------------------------------------------
+        |
+        | Permite também:
+        |
+        | 7d
+        | 30d
+        | 60days
+        |
+        */
+
+        const aliases = {
+
+            "7d":
+                "week",
+
+            "30d":
+                "month",
+
+            "60days":
+                "60d",
+
+            "365d":
+                "year"
+
+        };
+
+
+        let periodoNormalizado =
+            String(
+                period
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if (
+            aliases[
+                periodoNormalizado
+            ]
+        ) {
+
+            periodoNormalizado =
+                aliases[
+                    periodoNormalizado
+                ];
+
+        }
+
+
         const days =
-            periods[period];
+            periods[
+                periodoNormalizado
+            ];
 
 
-        if (!days) {
+        if (
+            !days
+        ) {
 
             throw new Error(
-                "Período inválido. Use day, week, month ou year."
+
+                "Período inválido. Use day, week, month, 60d ou year."
+
             );
 
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | CACHE
+        |--------------------------------------------------------------------------
+        |
+        | A chave considera:
+        |
+        | moeda + período
+        |
+        | Assim:
+        |
+        | bitcoin:30
+        | bitcoin:60
+        |
+        | são armazenados separadamente.
+        |
+        */
+
+        const cacheKey =
+            `${coinId}:${periodoNormalizado}`;
+
+
+        const agora =
+            Date.now();
+
+
+        const cache =
+            historyCache.get(
+                cacheKey
+            );
+
+
+        if (
+
+            cache &&
+
+            (
+                agora -
+                cache.timestamp
+            ) <
+
+            HISTORY_CACHE_TIME
+
+        ) {
+
+            console.log(
+
+                `HISTÓRICO: cache utilizado → ${coinId} (${periodoNormalizado})`
+
+            );
+
+
+            return {
+
+                prices:
+                    cache.prices
+
+            };
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | URL
+        |--------------------------------------------------------------------------
+        */
+
         const url =
+
             `${COINGECKO_API}/coins/` +
-            `${encodeURIComponent(coinId)}` +
+
+            `${encodeURIComponent(
+                coinId
+            )}` +
+
             `/market_chart`;
 
 
@@ -607,29 +871,29 @@ async function getCoinHistory(
             "================================="
         );
 
+
         console.log(
             "BUSCANDO HISTÓRICO DA MOEDA"
         );
+
 
         console.log(
             "Coin ID:",
             coinId
         );
 
+
         console.log(
             "Período:",
-            period
+            periodoNormalizado
         );
+
 
         console.log(
             "Dias:",
             days
         );
 
-        console.log(
-            "URL:",
-            url
-        );
 
         console.log(
             "================================="
@@ -638,13 +902,15 @@ async function getCoinHistory(
 
         /*
         |--------------------------------------------------------------------------
-        | Consulta histórico
+        | Consulta CoinGecko
         |--------------------------------------------------------------------------
         */
 
         const response =
             await axios.get(
+
                 url,
+
                 {
 
                     params: {
@@ -671,13 +937,8 @@ async function getCoinHistory(
                     }
 
                 }
+
             );
-
-
-        console.log(
-            "CoinGecko respondeu:",
-            response.status
-        );
 
 
         /*
@@ -687,31 +948,63 @@ async function getCoinHistory(
         */
 
         if (
+
             !response.data ||
+
             !Array.isArray(
                 response.data.prices
             )
+
         ) {
 
             throw new Error(
+
                 "A CoinGecko não retornou o array de preços."
+
             );
 
         }
 
 
+        const prices =
+            response.data.prices;
+
+
         console.log(
-            "Quantidade de preços:",
-            response.data.prices.length
+
+            `Histórico recebido: ${prices.length} pontos.`
+
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Salva no cache
+        |--------------------------------------------------------------------------
+        */
+
+        historyCache.set(
+
+            cacheKey,
+
+            {
+
+                timestamp:
+                    agora,
+
+                prices
+
+            }
+
         );
 
 
         return {
 
-            prices:
-                response.data.prices
+            prices
 
         };
+
 
     } catch (error) {
 
@@ -719,23 +1012,28 @@ async function getCoinHistory(
             "================================="
         );
 
+
         console.log(
             "ERRO AO BUSCAR HISTÓRICO"
         );
 
+
         console.log(
             "================================="
         );
+
 
         console.log(
             "Coin ID:",
             coinId
         );
 
+
         console.log(
             "Período:",
             period
         );
+
 
         console.log(
             "Mensagem:",
@@ -748,25 +1046,33 @@ async function getCoinHistory(
         ) {
 
             console.log(
+
                 "STATUS DA COINGECKO:",
+
                 error.response.status
+
             );
 
+
             console.log(
+
                 "DADOS DA COINGECKO:",
+
                 error.response.data
+
             );
 
         }
 
 
         if (
-            error.request &&
-            !error.response
+            error.request
         ) {
 
             console.log(
-                "A requisição foi enviada, mas não houve resposta da CoinGecko."
+
+                "A requisição foi enviada, mas não houve resposta."
+
             );
 
         }
@@ -777,17 +1083,16 @@ async function getCoinHistory(
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Preserva a mensagem original
-        |--------------------------------------------------------------------------
-        */
-
         throw new Error(
+
             error.response?.data?.error ||
+
             error.response?.data?.status?.error_message ||
+
             error.message ||
+
             "Não foi possível obter o histórico da moeda."
+
         );
 
     }
@@ -797,7 +1102,20 @@ async function getCoinHistory(
 
 /* ============================================================
    UPDATE MARKET SENTIMENT
-   ============================================================ */
+============================================================ */
+
+
+/*
+|--------------------------------------------------------------------------
+| Atualiza o sentimento das moedas
+|--------------------------------------------------------------------------
+|
+| O cálculo utiliza:
+|
+| 40% → histórico completo
+| 60% → 10 notícias mais recentes
+|
+*/
 
 async function updateMarketSentiment() {
 
@@ -807,18 +1125,32 @@ async function updateMarketSentiment() {
             "================================="
         );
 
+
         console.log(
             "ATUALIZANDO SENTIMENTO DAS MOEDAS"
         );
+
 
         console.log(
             "================================="
         );
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | Busca moedas
+        |--------------------------------------------------------------------------
+        */
+
         const coins =
             await Coin.find();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Processa cada moeda
+        |--------------------------------------------------------------------------
+        */
 
         for (
             const coin
@@ -829,25 +1161,43 @@ async function updateMarketSentiment() {
                 coin.symbol.toUpperCase();
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Busca notícias da moeda
+            |--------------------------------------------------------------------------
+            */
+
             const posts =
-                await Post
-                    .find({
-                        coin:
-                            symbol
-                    })
+                await Post.find({
+
+                    coin:
+                        symbol
+
+                })
                     .sort({
+
                         publishedAt:
                             -1
+
                     });
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Nenhuma notícia
+            |--------------------------------------------------------------------------
+            */
 
             if (
                 posts.length === 0
             ) {
 
                 console.log(
+
                     `Sem posts para ${coin.symbol}`
+
                 );
+
 
                 continue;
 
@@ -856,7 +1206,7 @@ async function updateMarketSentiment() {
 
             /*
             |--------------------------------------------------------------------------
-            | MÉDIA HISTÓRICA
+            | HISTÓRICO
             |--------------------------------------------------------------------------
             */
 
@@ -870,6 +1220,7 @@ async function updateMarketSentiment() {
             ) {
 
                 historicalTotal +=
+
                     Number(
                         post.sentimentScore
                     ) || 0;
@@ -878,13 +1229,14 @@ async function updateMarketSentiment() {
 
 
             const historicalAverage =
+
                 historicalTotal /
                 posts.length;
 
 
             /*
             |--------------------------------------------------------------------------
-            | MÉDIA RECENTE
+            | NOTÍCIAS MAIS RECENTES
             |--------------------------------------------------------------------------
             */
 
@@ -905,6 +1257,7 @@ async function updateMarketSentiment() {
             ) {
 
                 recentTotal +=
+
                     Number(
                         post.sentimentScore
                     ) || 0;
@@ -913,6 +1266,7 @@ async function updateMarketSentiment() {
 
 
             const recentAverage =
+
                 recentTotal /
                 recentPosts.length;
 
@@ -921,14 +1275,21 @@ async function updateMarketSentiment() {
             |--------------------------------------------------------------------------
             | SCORE FINAL
             |--------------------------------------------------------------------------
+            |
+            | 40% histórico
+            | 60% notícias recentes
+            |
             */
 
             const finalScore =
+
                 (
                     historicalAverage *
                     0.4
                 )
+
                 +
+
                 (
                     recentAverage *
                     0.6
@@ -937,21 +1298,34 @@ async function updateMarketSentiment() {
 
             /*
             |--------------------------------------------------------------------------
-            | LIMITA SCORE
+            | Limita entre -100 e +100
             |--------------------------------------------------------------------------
             */
 
             coin.sentimentScore =
+
                 Math.max(
+
                     -100,
+
                     Math.min(
+
                         100,
+
                         Math.round(
                             finalScore
                         )
+
                     )
+
                 );
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Salva
+            |--------------------------------------------------------------------------
+            */
 
             await coin.save();
 
@@ -963,23 +1337,37 @@ async function updateMarketSentiment() {
             */
 
             console.log(
+
                 `${coin.name} → Sentiment Score: ${coin.sentimentScore}`
+
             );
 
-            console.log(
-                `   📰 Histórico: ${posts.length} notícias`
-            );
 
             console.log(
-                `   🕒 Base recente: ${recentPosts.length} notícias`
+
+                `   Histórico: ${posts.length} notícias`
+
             );
 
-            console.log(
-                `   📊 Média histórica: ${historicalAverage.toFixed(2)}`
-            );
 
             console.log(
-                `   📈 Média recente: ${recentAverage.toFixed(2)}`
+
+                `   Base recente: ${recentPosts.length} notícias`
+
+            );
+
+
+            console.log(
+
+                `   Média histórica: ${historicalAverage.toFixed(2)}`
+
+            );
+
+
+            console.log(
+
+                `   Média recente: ${recentAverage.toFixed(2)}`
+
             );
 
         }
@@ -989,19 +1377,23 @@ async function updateMarketSentiment() {
             "================================="
         );
 
+
         console.log(
             "SENTIMENTOS ATUALIZADOS"
         );
 
+
         console.log(
             "================================="
         );
+
 
     } catch (error) {
 
         console.log(
             "ERRO AO ATUALIZAR SENTIMENTO:"
         );
+
 
         console.log(
             error.message
@@ -1013,8 +1405,8 @@ async function updateMarketSentiment() {
 
 
 /* ============================================================
-   EXPORTAÇÕES
-   ============================================================ */
+   EXPORTS
+============================================================ */
 
 module.exports = {
 
