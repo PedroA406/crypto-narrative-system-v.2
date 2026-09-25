@@ -12,7 +12,7 @@ const API_BASE_URL =
     "https://crypto-narrative-system.onrender.com";
 
 const ANALYSIS_ENDPOINT =
-    `${API_BASE_URL}/market/narratives/analysis`;
+    `${API_BASE_URL}/market/narratives/general`;
 
 
 /* ============================================================
