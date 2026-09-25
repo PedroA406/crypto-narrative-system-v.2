@@ -2284,6 +2284,48 @@ async function obterHistoricoPreco(
             resultado?.prices || [];
 
 
+        console.log(
+            "=================================================="
+        );
+
+        console.log(
+            "[NARRATIVE PRICE] HISTÓRICO RECEBIDO"
+        );
+
+        console.log(
+            "Moeda:",
+            coinId
+        );
+
+        console.log(
+            "Período:",
+            periodoNormalizado
+        );
+
+        console.log(
+            "Quantidade de pontos:",
+            prices.length
+        );
+
+        if (prices.length > 0) {
+
+            console.log(
+                "Primeiro ponto:",
+                prices[0]
+            );
+
+            console.log(
+                "Último ponto:",
+                prices[prices.length - 1]
+            );
+
+        }
+
+        console.log(
+            "=================================================="
+        );
+
+
         const data =
             prices
 
@@ -2605,6 +2647,53 @@ function construirSerieMoeda(
         transformarPrecosDiarios(
             prices
         );
+
+
+    console.log(
+        "=================================================="
+    );
+
+    console.log(
+        "[NARRATIVE PRICE] FILTRO DA SÉRIE"
+    );
+
+    console.log(
+        "Moeda:",
+        symbol
+    );
+
+    console.log(
+        "Início da análise:",
+        inicio
+    );
+
+    console.log(
+        "Fim da análise:",
+        fim
+    );
+
+    console.log(
+        "Quantidade de preços diários:",
+        precosDiarios.length
+    );
+
+    if (precosDiarios.length > 0) {
+
+        console.log(
+            "Primeira data disponível:",
+            precosDiarios[0].data
+        );
+
+        console.log(
+            "Última data disponível:",
+            precosDiarios[precosDiarios.length - 1].data
+        );
+
+    }
+
+    console.log(
+        "=================================================="
+    );
 
 
     const inicioData =
