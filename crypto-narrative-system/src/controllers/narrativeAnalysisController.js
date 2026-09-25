@@ -12,14 +12,73 @@ async function getNarrativeAnalysis(req, res) {
 
     try {
 
+        /*
+        |--------------------------------------------------------------------------
+        | FILTROS RECEBIDOS DA PÁGINA
+        |--------------------------------------------------------------------------
+        */
+
+        const period =
+            req.query.period ||
+            "30d";
+
+
+        const asset =
+            req.query.asset ||
+            "all";
+
+
+        console.log(
+            "================================="
+        );
+
+
+        console.log(
+            "ANÁLISE NARRATIVA × PREÇO"
+        );
+
+
+        console.log(
+            "Período:",
+            period
+        );
+
+
+        console.log(
+            "Ativo:",
+            asset
+        );
+
+
+        console.log(
+            "================================="
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GERA A ANÁLISE
+        |--------------------------------------------------------------------------
+        */
+
         const analysis =
             await narrativeAnalysisService
-                .obterAnaliseCompleta();
+                .obterAnaliseCompleta(
+                    period,
+                    asset
+                );
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPOSTA
+        |--------------------------------------------------------------------------
+        */
 
         res.status(200).json({
 
-            success: true,
+            success:
+                true,
 
             data:
                 analysis
@@ -37,7 +96,8 @@ async function getNarrativeAnalysis(req, res) {
 
         res.status(500).json({
 
-            success: false,
+            success:
+                false,
 
             message:
                 "Erro ao gerar análise de narrativas.",
