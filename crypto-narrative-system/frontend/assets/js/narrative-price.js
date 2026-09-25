@@ -236,14 +236,18 @@ CONFIGURAÇÃO GLOBAL DO CHART.JS
 ============================================================
 */
 
-Chart.defaults.color =
-    "#809590";
+if (typeof Chart !== "undefined") {
 
-Chart.defaults.borderColor =
-    "rgba(255,255,255,0.06)";
+    Chart.defaults.color =
+        "#809590";
 
-Chart.defaults.font.family =
-    "Inter, Arial, Helvetica, sans-serif";
+    Chart.defaults.borderColor =
+        "rgba(255,255,255,0.06)";
+
+    Chart.defaults.font.family =
+        "Inter, Arial, Helvetica, sans-serif";
+
+}
 
 
 /*
@@ -316,7 +320,7 @@ async function carregarAnalise() {
         const periodo =
             periodSelector
                 ? periodSelector.value
-                : "year";
+                : "30d";
 
 
         /*
@@ -347,13 +351,18 @@ async function carregarAnalise() {
         );
 
 
+        /*
+        IMPORTANTE:
+        O backend espera "asset".
+        */
+
         if (
             moedaSelecionada &&
             moedaSelecionada !== "all"
         ) {
 
             params.set(
-                "coin",
+                "asset",
                 moedaSelecionada
             );
 
@@ -362,6 +371,12 @@ async function carregarAnalise() {
 
         const url =
             `${API_URL}?${params.toString()}`;
+
+
+        console.log(
+            "Solicitando análise:",
+            url
+        );
 
 
         const response =
@@ -399,9 +414,24 @@ async function carregarAnalise() {
         }
 
 
+        if (!result.data) {
+
+            throw new Error(
+                "A API retornou uma resposta sem dados de análise."
+            );
+
+        }
+
+
         analysisData =
             result.data;
 
+
+        /*
+        ========================================================
+        PREENCHER MOEDAS
+        ========================================================
+        */
 
         preencherMoedas();
 
@@ -414,7 +444,8 @@ async function carregarAnalise() {
 
         if (
             moedaSelecionada &&
-            moedaSelecionada !== "all"
+            moedaSelecionada !== "all" &&
+            coinSelector
         ) {
 
             const existe =
@@ -436,6 +467,12 @@ async function carregarAnalise() {
 
         }
 
+
+        /*
+        ========================================================
+        ATUALIZA INTERFACE
+        ========================================================
+        */
 
         atualizarInterface();
 
@@ -516,6 +553,12 @@ function preencherMoedas() {
     coinSelector.innerHTML = "";
 
 
+    /*
+    ========================================================
+    VISÃO GERAL
+    ========================================================
+    */
+
     const optionTodos =
         document.createElement("option");
 
@@ -533,6 +576,12 @@ function preencherMoedas() {
     );
 
 
+    /*
+    ========================================================
+    MOEDAS
+    ========================================================
+    */
+
     lista.forEach(
         item => {
 
@@ -542,16 +591,25 @@ function preencherMoedas() {
                 );
 
 
+            /*
+            O serviço retorna coinId e simbolo.
+            Mantemos symbol como compatibilidade.
+            */
+
             option.value =
                 item.coinId ||
                 item.symbol ||
+                item.simbolo ||
                 "";
 
 
             option.textContent =
                 item.name ||
+                item.nome ||
                 item.symbol ||
-                item.coinId;
+                item.simbolo ||
+                item.coinId ||
+                "Criptomoeda";
 
 
             coinSelector.appendChild(
@@ -561,6 +619,12 @@ function preencherMoedas() {
         }
     );
 
+
+    /*
+    ========================================================
+    RESTAURAR VALOR
+    ========================================================
+    */
 
     const existe =
         Array.from(
@@ -576,6 +640,11 @@ function preencherMoedas() {
 
         coinSelector.value =
             valorAtual;
+
+    } else {
+
+        coinSelector.value =
+            "all";
 
     }
 
@@ -619,7 +688,8 @@ function obterAnaliseSelecionada() {
         lista.find(
             item =>
                 item.coinId === selecionada ||
-                item.symbol === selecionada
+                item.symbol === selecionada ||
+                item.simbolo === selecionada
         ) ||
         null
     );
@@ -744,7 +814,9 @@ function atualizarInformacoesHero() {
         if (moeda) {
 
             heroCoin.textContent =
+                moeda.nome ||
                 moeda.name ||
+                moeda.simbolo ||
                 moeda.symbol ||
                 moeda.coinId ||
                 "Criptomoeda";
@@ -765,7 +837,7 @@ function atualizarInformacoesHero() {
             obterNomePeriodo(
                 periodSelector
                     ? periodSelector.value
-                    : "year"
+                    : "30d"
             );
 
     }
@@ -776,11 +848,13 @@ function atualizarInformacoesHero() {
         const total =
             moeda
                 ? (
+                    moeda.totalNoticias ??
                     moeda.newsCount ??
                     moeda.resumo?.newsCount ??
                     0
                 )
                 : (
+                    analysisData.resumo?.totalNoticias ??
                     analysisData.totalNoticias ??
                     analysisData.totalPosts ??
                     0
@@ -810,6 +884,15 @@ function obterNomePeriodo(
 
     const periodos = {
 
+        "7d":
+            "Últimos 7 dias",
+
+        "30d":
+            "Últimos 30 dias",
+
+        "60d":
+            "Últimos 60 dias",
+
         day:
             "Último dia",
 
@@ -827,7 +910,7 @@ function obterNomePeriodo(
 
     return (
         periodos[periodo] ||
-        "Último ano"
+        "Últimos 30 dias"
     );
 
 }
@@ -849,30 +932,65 @@ function atualizarMoeda(
         {};
 
 
+    /*
+    ========================================================
+    PREÇO ATUAL
+    ========================================================
+    */
+
     const currentPrice =
+        moeda.precoAtual ??
         resumo.currentPrice ??
         moeda.currentPrice ??
         moeda.price;
 
 
+    /*
+    ========================================================
+    RETORNO DO PERÍODO
+    ========================================================
+    */
+
     const periodReturn =
+        moeda.variacaoPeriodo ??
         resumo.periodReturn ??
         moeda.periodReturn;
 
 
+    /*
+    ========================================================
+    NOTÍCIAS
+    ========================================================
+    */
+
     const newsCount =
+        moeda.totalNoticias ??
         moeda.newsCount ??
         resumo.newsCount ??
         0;
 
 
+    /*
+    ========================================================
+    SENTIMENTO
+    ========================================================
+    */
+
     const averageSentiment =
+        moeda.sentimentoMedio ??
         moeda.averageSentiment ??
         resumo.averageSentiment ??
         0;
 
 
+    /*
+    ========================================================
+    VOLATILIDADE
+    ========================================================
+    */
+
     const volatility =
+        moeda.volatilidadeMedia ??
         moeda.volatility ??
         resumo.volatility ??
         0;
@@ -986,60 +1104,126 @@ VISÃO GERAL
 
 function atualizarVisaoGeral() {
 
+    if (!analysisData) {
+
+        return;
+
+    }
+
+
     const resumo =
         analysisData.resumoPreco ||
         {};
 
 
+    const sentimentoPreco =
+        analysisData.sentimentoPreco ||
+        {};
+
+
     const averageSentiment =
         analysisData.sentimentoMedio ??
+        sentimentoPreco.sentimentoMedio ??
         resumo.averageSentiment ??
         0;
 
 
-    document.getElementById(
-        "currentPrice"
-    ).textContent =
-        "Mercado";
+    const totalNoticias =
+        analysisData.resumo?.totalNoticias ??
+        analysisData.totalNoticias ??
+        analysisData.totalPosts ??
+        0;
 
 
-    document.getElementById(
-        "priceVariation"
-    ).textContent =
-        "Selecione uma moeda";
-
-
-    document.getElementById(
-        "newsCount"
-    ).textContent =
-        formatNumber(
-            analysisData.totalNoticias ??
-            analysisData.totalPosts ??
-            0,
-            0
+    const currentPriceElement =
+        document.getElementById(
+            "currentPrice"
         );
 
 
-    document.getElementById(
-        "averageSentiment"
-    ).textContent =
-        formatNumber(
-            averageSentiment
+    const priceVariationElement =
+        document.getElementById(
+            "priceVariation"
         );
 
 
-    document.getElementById(
-        "sentimentDescription"
-    ).textContent =
-        obterDescricaoSentimento(
-            averageSentiment
+    const newsCountElement =
+        document.getElementById(
+            "newsCount"
         );
 
 
-    document.getElementById(
-        "volatilityValue"
-    ).textContent =
-        "—";
+    const averageSentimentElement =
+        document.getElementById(
+            "averageSentiment"
+        );
+
+
+    const sentimentDescriptionElement =
+        document.getElementById(
+            "sentimentDescription"
+        );
+
+
+    const volatilityElement =
+        document.getElementById(
+            "volatilityValue"
+        );
+
+
+    if (currentPriceElement) {
+
+        currentPriceElement.textContent =
+            "Mercado";
+
+    }
+
+
+    if (priceVariationElement) {
+
+        priceVariationElement.textContent =
+            "Selecione uma moeda";
+
+    }
+
+
+    if (newsCountElement) {
+
+        newsCountElement.textContent =
+            formatNumber(
+                totalNoticias,
+                0
+            );
+
+    }
+
+
+    if (averageSentimentElement) {
+
+        averageSentimentElement.textContent =
+            formatNumber(
+                averageSentiment
+            );
+
+    }
+
+
+    if (sentimentDescriptionElement) {
+
+        sentimentDescriptionElement.textContent =
+            obterDescricaoSentimento(
+                averageSentiment
+            );
+
+    }
+
+
+    if (volatilityElement) {
+
+        volatilityElement.textContent =
+            "—";
+
+    }
 
 }
 
@@ -1178,7 +1362,7 @@ function criarGraficoPrecoSentimento(
                     item.preco ??
                     0
                 )
-        );
+            );
 
 
     const sentiment =
@@ -1189,7 +1373,7 @@ function criarGraficoPrecoSentimento(
                     item.sentimentScore ??
                     0
                 )
-        );
+            );
 
 
     charts.priceSentiment =
@@ -1205,6 +1389,7 @@ function criarGraficoPrecoSentimento(
                     datasets: [
 
                         {
+
                             label: "Preço",
 
                             data: prices,
@@ -1227,6 +1412,7 @@ function criarGraficoPrecoSentimento(
                         },
 
                         {
+
                             label: "Sentimento",
 
                             data: sentiment,
@@ -1285,7 +1471,7 @@ function criarGraficoDistribuicao(
 
         mostrarGraficoVazio(
             canvas,
-            "Selecione uma moeda."
+            "Selecione uma criptomoeda."
         );
 
         return;
@@ -1471,7 +1657,7 @@ function criarGraficoNarrativaPreco(
                     item.preco ??
                     0
                 )
-        );
+            );
 
 
     const narrative =
@@ -1482,7 +1668,7 @@ function criarGraficoNarrativaPreco(
                     item.intensidadeNarrativa ??
                     0
                 )
-        );
+            );
 
 
     charts.narrativePrice =
@@ -1547,6 +1733,7 @@ function criarGraficoNarrativaPreco(
                     criarOpcoesGraficoDualAxis()
 
             }
+
         );
 
 }
@@ -1624,9 +1811,10 @@ function criarGraficoNoticiasRetorno(
                 Number(
                     item.newsCount ??
                     item.newsVolume ??
+                    item.noticias ??
                     0
                 )
-        );
+            );
 
 
     const returns =
@@ -1635,9 +1823,10 @@ function criarGraficoNoticiasRetorno(
                 Number(
                     item.return ??
                     item.retorno ??
+                    item.retornoPercentual ??
                     0
                 )
-        );
+            );
 
 
     charts.newsReturn =
@@ -1747,6 +1936,7 @@ function criarGraficoNoticiasRetorno(
                 }
 
             }
+
         );
 
 }
@@ -1839,6 +2029,7 @@ function criarGraficoNarrativaVolatilidade(
                         Number(
                             item.return ??
                             item.retorno ??
+                            item.retornoPercentual ??
                             0
                         )
                     )
@@ -1910,6 +2101,7 @@ function criarGraficoNarrativaVolatilidade(
                     criarOpcoesGraficoDualAxis()
 
             }
+
         );
 
 }
@@ -1969,12 +2161,24 @@ function criarGraficoDefasagem(
     }
 
 
+    if (!dados.length) {
+
+        mostrarGraficoVazio(
+            canvas,
+            "Não existem dados de defasagem suficientes."
+        );
+
+        return;
+
+    }
+
+
     const labels =
         dados.map(
             item =>
                 item.lag ||
                 item.defasagem ||
-                `${item.days || 0}d`
+                `${item.days || item.dias || 0}d`
         );
 
 
@@ -2056,6 +2260,7 @@ function criarGraficoDefasagem(
                 }
 
             }
+
         );
 
 }
@@ -2109,7 +2314,10 @@ function preencherTabelaNarrativas(
         [];
 
 
-    if (!Array.isArray(dados) || !dados.length) {
+    if (
+        !Array.isArray(dados) ||
+        !dados.length
+    ) {
 
         tbody.innerHTML = `
             <tr>
@@ -2173,6 +2381,7 @@ function preencherTabelaNarrativas(
                     ${formatNumber(
                         item.newsCount ??
                         item.quantidade ??
+                        item.totalNoticias ??
                         0,
                         0
                     )}
@@ -2295,7 +2504,7 @@ function preencherDefasagens(
             const lag =
                 item.lag ||
                 item.defasagem ||
-                `${item.days || 0} dias`;
+                `${item.days || item.dias || 0} dias`;
 
 
             const element =
@@ -2389,12 +2598,15 @@ function preencherInterpretacao(
             resumo.correlation ??
             resumo.correlacao ??
             moeda.correlation ??
+            moeda.sentimentoPreco?.correlation ??
+            moeda.sentimentoPreco?.correlacao ??
             0
         );
 
 
     const sentiment =
         Number(
+            moeda.sentimentoMedio ??
             moeda.averageSentiment ??
             resumo.averageSentiment ??
             0
@@ -2403,6 +2615,7 @@ function preencherInterpretacao(
 
     const news =
         Number(
+            moeda.totalNoticias ??
             moeda.newsCount ??
             resumo.newsCount ??
             0
@@ -2416,12 +2629,12 @@ function preencherInterpretacao(
     if (correlation > 0.3) {
 
         texto +=
-            "Foi observada uma associação positiva entre a intensidade das informações analisadas e o comportamento do preço no período. ";
+            "Foi observada uma associação positiva entre as variáveis analisadas e o comportamento do preço no período. ";
 
     } else if (correlation < -0.3) {
 
         texto +=
-            "Foi observada uma associação negativa entre as variáveis analisadas no período. ";
+            "Foi observada uma associação negativa entre as variáveis analisadas e o comportamento do preço no período. ";
 
     } else {
 
@@ -2734,6 +2947,24 @@ function mostrarGraficoVazio(
     }
 
 
+    /*
+    Se já existe um gráfico nesse canvas,
+    destrói antes de desenhar a mensagem.
+    */
+
+    const chartExistente =
+        Chart.getChart
+            ? Chart.getChart(canvas)
+            : null;
+
+
+    if (chartExistente) {
+
+        chartExistente.destroy();
+
+    }
+
+
     const context =
         canvas.getContext(
             "2d"
@@ -2885,8 +3116,7 @@ function executarAnaliseSelecionada() {
 /*
 ============================================================
 EVENTOS
-============================================================
-*/
+============================================================*/
 
 
 /*
@@ -2917,13 +3147,6 @@ if (coinSelector) {
         "change",
         () => {
 
-            /*
-            Não executamos automaticamente.
-
-            O usuário escolhe a moeda e depois
-            confirma pelo botão "Executar análise".
-            */
-
             setStatus(
                 "Moeda selecionada. Clique em Executar análise."
             );
@@ -2945,13 +3168,6 @@ if (periodSelector) {
     periodSelector.addEventListener(
         "change",
         () => {
-
-            /*
-            Não executamos automaticamente.
-
-            O usuário escolhe o período e depois
-            confirma pelo botão "Executar análise".
-            */
 
             setStatus(
                 "Período selecionado. Clique em Executar análise."
