@@ -4,9 +4,25 @@ const narrativeAnalysisService =
 
 /*
 |--------------------------------------------------------------------------
-| ANÁLISE COMPLETA DE NARRATIVAS
+| ANÁLISE NARRATIVA × PREÇO
 |--------------------------------------------------------------------------
+|
+| Endpoint:
+|
+| GET /market/narratives/analysis
+|
+| Parâmetros:
+|
+| ?period=7d
+| ?period=30d
+| ?period=60d
+|
+| ?asset=all
+| ?asset=bitcoin
+| ?asset=btc
+|
 */
+
 
 async function getNarrativeAnalysis(req, res) {
 
@@ -14,7 +30,7 @@ async function getNarrativeAnalysis(req, res) {
 
         /*
         |--------------------------------------------------------------------------
-        | FILTROS RECEBIDOS DA PÁGINA
+        | PERÍODO
         |--------------------------------------------------------------------------
         */
 
@@ -23,47 +39,51 @@ async function getNarrativeAnalysis(req, res) {
             "30d";
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | ATIVO
+        |--------------------------------------------------------------------------
+        */
+
         const asset =
             req.query.asset ||
             "all";
 
 
         console.log(
-            "================================="
+            "=============================================="
         );
 
 
         console.log(
-            "ANÁLISE NARRATIVA × PREÇO"
+            "REQUISIÇÃO — NARRATIVA × PREÇO"
         );
 
 
         console.log(
-            "Período:",
-            period
+            `Período: ${period}`
         );
 
 
         console.log(
-            "Ativo:",
-            asset
+            `Ativo: ${asset}`
         );
 
 
         console.log(
-            "================================="
+            "=============================================="
         );
 
 
         /*
         |--------------------------------------------------------------------------
-        | GERA A ANÁLISE
+        | EXECUTAR ANÁLISE OTIMIZADA
         |--------------------------------------------------------------------------
         */
 
         const analysis =
             await narrativeAnalysisService
-                .obterAnaliseCompleta(
+                .obterAnaliseNarrativaPreco(
                     period,
                     asset
                 );
@@ -89,7 +109,7 @@ async function getNarrativeAnalysis(req, res) {
     } catch (error) {
 
         console.error(
-            "❌ Erro na análise de narrativas:",
+            "❌ ERRO NA ANÁLISE NARRATIVA × PREÇO:",
             error
         );
 
@@ -100,7 +120,7 @@ async function getNarrativeAnalysis(req, res) {
                 false,
 
             message:
-                "Erro ao gerar análise de narrativas.",
+                "Erro ao gerar análise narrativa × preço.",
 
             error:
                 error.message
