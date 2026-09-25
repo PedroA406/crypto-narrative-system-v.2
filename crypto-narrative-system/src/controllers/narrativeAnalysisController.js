@@ -2,9 +2,10 @@ const narrativeAnalysisService =
     require("../services/narrativeAnalysisService");
 
 
+
 /*
 |--------------------------------------------------------------------------
-| ANÁLISE NARRATIVA × PREÇO
+| NARRATIVA × PREÇO
 |--------------------------------------------------------------------------
 |
 | Endpoint:
@@ -77,7 +78,7 @@ async function getNarrativeAnalysis(req, res) {
 
         /*
         |--------------------------------------------------------------------------
-        | EXECUTAR ANÁLISE OTIMIZADA
+        | EXECUTAR ANÁLISE NARRATIVA × PREÇO
         |--------------------------------------------------------------------------
         */
 
@@ -132,6 +133,104 @@ async function getNarrativeAnalysis(req, res) {
 }
 
 
+
+/*
+|--------------------------------------------------------------------------
+| ANÁLISE GERAL DE NARRATIVAS
+|--------------------------------------------------------------------------
+|
+| Endpoint:
+|
+| GET /market/narratives/general
+|
+| Essa análise utiliza:
+|
+| obterAnaliseCompleta()
+|
+| e mantém os dados utilizados pela página:
+|
+| narrative-analysis.html
+|
+*/
+
+
+async function getGeneralNarrativeAnalysis(
+    req,
+    res
+) {
+
+    try {
+
+        console.log(
+            "=============================================="
+        );
+
+
+        console.log(
+            "REQUISIÇÃO — ANÁLISE GERAL DE NARRATIVAS"
+        );
+
+
+        console.log(
+            "=============================================="
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EXECUTAR ANÁLISE GERAL
+        |--------------------------------------------------------------------------
+        */
+
+        const analysis =
+            await narrativeAnalysisService
+                .obterAnaliseCompleta();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPOSTA
+        |--------------------------------------------------------------------------
+        */
+
+        res.status(200).json({
+
+            success:
+                true,
+
+            data:
+                analysis
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ ERRO NA ANÁLISE GERAL DE NARRATIVAS:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success:
+                false,
+
+            message:
+                "Erro ao gerar análise geral de narrativas.",
+
+            error:
+                error.message
+
+        });
+
+    }
+
+}
+
+
+
 /*
 |--------------------------------------------------------------------------
 | EXPORT
@@ -140,6 +239,8 @@ async function getNarrativeAnalysis(req, res) {
 
 module.exports = {
 
-    getNarrativeAnalysis
+    getNarrativeAnalysis,
+
+    getGeneralNarrativeAnalysis
 
 };
