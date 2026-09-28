@@ -79,12 +79,12 @@ function formatCurrency(value) {
             {
                 style: "currency",
                 currency: "USD",
-                maximumFractionDigits: number >= 1000 ? 0 : 2
+                maximumFractionDigits:
+                    number >= 1000 ? 0 : 2
             }
         ).format(number);
 
     }
-
 
     return new Intl.NumberFormat(
         "en-US",
@@ -134,7 +134,10 @@ function formatPercentage(value) {
         return "—";
     }
 
-    const prefix = number > 0 ? "+" : "";
+    const prefix =
+        number > 0
+            ? "+"
+            : "";
 
     return `${prefix}${number.toFixed(2)}%`;
 }
@@ -179,11 +182,13 @@ function formatRelativeDate(value) {
 
     const now = Date.now();
 
-    const difference = now - date.getTime();
+    const difference =
+        now - date.getTime();
 
-    const minutes = Math.floor(
-        difference / 60000
-    );
+    const minutes =
+        Math.floor(
+            difference / 60000
+        );
 
     if (minutes < 1) {
         return "agora";
@@ -193,17 +198,19 @@ function formatRelativeDate(value) {
         return `há ${minutes} min`;
     }
 
-    const hours = Math.floor(
-        minutes / 60
-    );
+    const hours =
+        Math.floor(
+            minutes / 60
+        );
 
     if (hours < 24) {
         return `há ${hours}h`;
     }
 
-    const days = Math.floor(
-        hours / 24
-    );
+    const days =
+        Math.floor(
+            hours / 24
+        );
 
     if (days < 7) {
         return `há ${days}d`;
@@ -240,19 +247,147 @@ function getInitials(name) {
         .split(/\s+/)
         .slice(0, 2)
         .map(
-            part => part.charAt(0)
+            part =>
+                part.charAt(0)
         )
         .join("")
         .toUpperCase();
 }
 
 
+/* ================================================================
+   IDENTIFICAÇÃO DAS MOEDAS
+   ================================================================ */
+
 function getCoinId(coin) {
 
+    if (!coin) {
+        return "";
+    }
+
+
+    /*
+    ------------------------------------------------------------
+    IDs oficiais utilizados pelo CoinGecko
+    ------------------------------------------------------------
+    */
+
+    const idsCoinGecko = {
+
+        bitcoin: "bitcoin",
+        btc: "bitcoin",
+
+        ethereum: "ethereum",
+        eth: "ethereum",
+
+        tether: "tether",
+        usdt: "tether",
+
+        bnb: "binancecoin",
+        binancecoin: "binancecoin",
+
+        xrp: "ripple",
+        ripple: "ripple",
+
+        usdc: "usd-coin",
+        "usd-coin": "usd-coin",
+
+        solana: "solana",
+        sol: "solana",
+
+        tron: "tron",
+        trx: "tron",
+
+        hyperliquid: "hyperliquid",
+        hype: "hyperliquid",
+
+        "figure-heloc": "figure-heloc",
+        "figure heloc": "figure-heloc"
+    };
+
+
+    /*
+    ------------------------------------------------------------
+    Tenta coinId
+    ------------------------------------------------------------
+    */
+
+    const coinId =
+        String(
+            coin.coinId || ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+        coinId &&
+        idsCoinGecko[coinId]
+    ) {
+
+        return idsCoinGecko[coinId];
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+    Tenta id
+    ------------------------------------------------------------
+    */
+
+    const id =
+        String(
+            coin.id || ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+        id &&
+        idsCoinGecko[id]
+    ) {
+
+        return idsCoinGecko[id];
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+    Tenta símbolo
+    ------------------------------------------------------------
+    */
+
+    const symbol =
+        String(
+            coin.symbol || ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+        symbol &&
+        idsCoinGecko[symbol]
+    ) {
+
+        return idsCoinGecko[symbol];
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+    Fallback
+    ------------------------------------------------------------
+    */
+
     return (
-        coin?.coinId ||
-        coin?.id ||
-        coin?.symbol ||
+        coinId ||
+        id ||
+        symbol ||
         ""
     );
 }
@@ -263,17 +398,24 @@ function getCoinSymbol(coin) {
     return (
         coin?.symbol ||
         ""
-    ).toString().toUpperCase();
+    )
+        .toString()
+        .toUpperCase();
 }
 
 
 async function fetchJson(url) {
 
-    const response = await fetch(url, {
-        headers: {
-            Accept: "application/json"
-        }
-    });
+    const response =
+        await fetch(
+            url,
+            {
+                headers: {
+                    Accept:
+                        "application/json"
+                }
+            }
+        );
 
 
     if (!response.ok) {
@@ -309,8 +451,13 @@ function showToast(
         );
 
 
-    if (!toast || !toastMessage) {
+    if (
+        !toast ||
+        !toastMessage
+    ) {
+
         return;
+
     }
 
 
@@ -322,29 +469,50 @@ function showToast(
 
 
     if (type === "error") {
-        toast.classList.add("error");
+        toast.classList.add(
+            "error"
+        );
     }
+
 
     if (type === "warning") {
-        toast.classList.add("warning");
+        toast.classList.add(
+            "warning"
+        );
     }
 
 
-    toastMessage.textContent = message;
-
-    requestAnimationFrame(() => {
-        toast.classList.add("show");
-    });
+    toastMessage.textContent =
+        message;
 
 
-    clearTimeout(toastTimer);
+    requestAnimationFrame(
+        () => {
+
+            toast.classList.add(
+                "show"
+            );
+
+        }
+    );
 
 
-    toastTimer = setTimeout(() => {
+    clearTimeout(
+        toastTimer
+    );
 
-        toast.classList.remove("show");
 
-    }, 3500);
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            3500
+        );
 }
 
 
@@ -455,10 +623,13 @@ async function loadCoins() {
 
 
         const coins =
-            normalizeArray(response);
+            normalizeArray(
+                response
+            );
 
 
-        coinsData = coins;
+        coinsData =
+            coins;
 
 
         if (!coins.length) {
@@ -469,23 +640,39 @@ async function loadCoins() {
                 "A API não retornou ativos para o Dashboard."
             );
 
-            updateMarketMetrics([]);
+
+            updateMarketMetrics(
+                []
+            );
+
 
             setAssetStatus(
                 "Sem dados"
             );
 
+
             return;
         }
 
 
-        renderCoins(coins);
+        renderCoins(
+            coins
+        );
 
-        updateMarketMetrics(coins);
 
-        renderVariationList(coins);
+        updateMarketMetrics(
+            coins
+        );
 
-        renderSentiment(coins);
+
+        renderVariationList(
+            coins
+        );
+
+
+        renderSentiment(
+            coins
+        );
 
 
         setAssetStatus(
@@ -557,13 +744,15 @@ function renderCoins(coins) {
 
 
     container.innerHTML =
-        coins.map(
-            (coin, index) =>
-                renderCoinCard(
-                    coin,
-                    index
-                )
-        ).join("");
+        coins
+            .map(
+                (coin, index) =>
+                    renderCoinCard(
+                        coin,
+                        index
+                    )
+            )
+            .join("");
 }
 
 
@@ -578,11 +767,15 @@ function renderCoinCard(
 
 
     const symbol =
-        getCoinSymbol(coin);
+        getCoinSymbol(
+            coin
+        );
 
 
     const id =
-        getCoinId(coin);
+        getCoinId(
+            coin
+        );
 
 
     const price =
@@ -621,11 +814,15 @@ function renderCoinCard(
 
 
     const initials =
-        getInitials(name);
+        getInitials(
+            name
+        );
 
 
     const safeId =
-        encodeURIComponent(id);
+        encodeURIComponent(
+            id
+        );
 
 
     return `
@@ -693,12 +890,15 @@ function renderCoinCard(
 
 
             <div class="coin-change ${changeClass}">
-                ${escapeHtml(formatPercentage(change))}
+                ${escapeHtml(
+                    formatPercentage(
+                        change
+                    )
+                )}
             </div>
 
 
             <div class="coin-details">
-
 
                 <div class="coin-detail">
 
@@ -724,7 +924,6 @@ function renderCoinCard(
                     </span>
 
                 </div>
-
 
             </div>
 
@@ -759,7 +958,9 @@ function renderCoinCard(
    MARKET METRICS
    ================================================================ */
 
-function updateMarketMetrics(coins) {
+function updateMarketMetrics(
+    coins
+) {
 
     const totalCoins =
         document.getElementById(
@@ -788,19 +989,23 @@ function updateMarketMetrics(coins) {
     if (!coins.length) {
 
         if (totalCoins) {
-            totalCoins.textContent = "0";
+            totalCoins.textContent =
+                "0";
         }
 
         if (totalMarketCap) {
-            totalMarketCap.textContent = "—";
+            totalMarketCap.textContent =
+                "—";
         }
 
         if (totalVolume) {
-            totalVolume.textContent = "—";
+            totalVolume.textContent =
+                "—";
         }
 
         if (averageVariation) {
-            averageVariation.textContent = "—";
+            averageVariation.textContent =
+                "—";
         }
 
         return;
@@ -809,10 +1014,15 @@ function updateMarketMetrics(coins) {
 
     const marketCap =
         coins.reduce(
-            (total, coin) =>
+            (
+                total,
+                coin
+            ) =>
                 total +
                 (
-                    Number(coin?.marketCap) || 0
+                    Number(
+                        coin?.marketCap
+                    ) || 0
                 ),
             0
         );
@@ -820,10 +1030,15 @@ function updateMarketMetrics(coins) {
 
     const volume =
         coins.reduce(
-            (total, coin) =>
+            (
+                total,
+                coin
+            ) =>
                 total +
                 (
-                    Number(coin?.volume) || 0
+                    Number(
+                        coin?.volume
+                    ) || 0
                 ),
             0
         );
@@ -845,9 +1060,14 @@ function updateMarketMetrics(coins) {
     const average =
         variations.length
             ? variations.reduce(
-                (a, b) => a + b,
+                (
+                    a,
+                    b
+                ) =>
+                    a + b,
                 0
-            ) / variations.length
+            ) /
+            variations.length
             : null;
 
 
@@ -903,7 +1123,9 @@ function updateMarketMetrics(coins) {
    VARIATION LIST
    ================================================================ */
 
-function renderVariationList(coins) {
+function renderVariationList(
+    coins
+) {
 
     const container =
         document.getElementById(
@@ -919,26 +1141,43 @@ function renderVariationList(coins) {
     const sorted =
         [...coins]
             .sort(
-                (a, b) =>
+                (
+                    a,
+                    b
+                ) =>
                     (
-                        Number(b?.change24h) || 0
+                        Number(
+                            b?.change24h
+                        ) || 0
                     ) -
                     (
-                        Number(a?.change24h) || 0
+                        Number(
+                            a?.change24h
+                        ) || 0
                     )
             )
-            .slice(0, 8);
+            .slice(
+                0,
+                8
+            );
 
 
     if (!sorted.length) {
 
         container.innerHTML = `
+
             <div class="empty-state">
-                <h3>Sem variações disponíveis</h3>
+
+                <h3>
+                    Sem variações disponíveis
+                </h3>
+
                 <p>
                     Não existem dados de variação suficientes para exibir esta seção.
                 </p>
+
             </div>
+
         `;
 
         return;
@@ -960,103 +1199,107 @@ function renderVariationList(coins) {
 
 
     container.innerHTML =
-        sorted.map(
-            coin => {
+        sorted
+            .map(
+                coin => {
 
-                const name =
-                    coin?.name ||
-                    getCoinSymbol(coin);
-
-
-                const variation =
-                    Number(
-                        coin?.change24h
-                    ) || 0;
+                    const name =
+                        coin?.name ||
+                        getCoinSymbol(
+                            coin
+                        );
 
 
-                const absolute =
-                    Math.abs(
-                        variation
-                    );
+                    const variation =
+                        Number(
+                            coin?.change24h
+                        ) || 0;
 
 
-                const width =
-                    Math.max(
-                        5,
-                        (
-                            absolute /
-                            maximum
-                        ) * 100
-                    );
+                    const absolute =
+                        Math.abs(
+                            variation
+                        );
 
 
-                const variationClass =
-                    getVariationClass(
-                        variation
-                    );
+                    const width =
+                        Math.max(
+                            5,
+                            (
+                                absolute /
+                                maximum
+                            ) *
+                            100
+                        );
 
 
-                const image =
-                    coin?.image ||
-                    "";
+                    const variationClass =
+                        getVariationClass(
+                            variation
+                        );
 
 
-                return `
-
-                    <div class="variation-item">
-
-                        <div class="variation-identity">
-
-                            ${
-                                image
-                                    ? `
-                                        <img
-                                            class="variation-mini-logo"
-                                            src="${escapeHtml(image)}"
-                                            alt="${escapeHtml(name)}"
-                                            loading="lazy"
-                                        >
-                                    `
-                                    : `
-                                        <div class="variation-mini-logo">
-                                        </div>
-                                    `
-                            }
+                    const image =
+                        coin?.image ||
+                        "";
 
 
-                            <span class="variation-name">
-                                ${escapeHtml(name)}
+                    return `
+
+                        <div class="variation-item">
+
+                            <div class="variation-identity">
+
+                                ${
+                                    image
+                                        ? `
+                                            <img
+                                                class="variation-mini-logo"
+                                                src="${escapeHtml(image)}"
+                                                alt="${escapeHtml(name)}"
+                                                loading="lazy"
+                                            >
+                                        `
+                                        : `
+                                            <div class="variation-mini-logo">
+                                            </div>
+                                        `
+                                }
+
+                                <span class="variation-name">
+                                    ${escapeHtml(name)}
+                                </span>
+
+                            </div>
+
+
+                            <div class="variation-track">
+
+                                <div
+                                    class="variation-fill ${variationClass}"
+                                    style="width:${width}%"
+                                ></div>
+
+                            </div>
+
+
+                            <span
+                                class="variation-value ${variationClass}"
+                            >
+                                ${escapeHtml(
+                                    formatPercentage(
+                                        variation
+                                    )
+                                )}
                             </span>
 
                         </div>
 
+                    `;
 
-                        <div class="variation-track">
-
-                            <div
-                                class="variation-fill ${variationClass}"
-                                style="width:${width}%"
-                            ></div>
-
-                        </div>
-
-
-                        <span
-                            class="variation-value ${variationClass}"
-                        >
-                            ${escapeHtml(
-                                formatPercentage(
-                                    variation
-                                )
-                            )}
-                        </span>
-
-                    </div>
-
-                `;
-
-            }
-        ).join("");
+                }
+            )
+            .join("");
 }
 
 
@@ -1064,12 +1307,16 @@ function renderVariationList(coins) {
    SENTIMENT
    ================================================================ */
 
-function renderSentiment(coins) {
+function renderSentiment(
+    coins
+) {
 
     const counts = {
+
         positive: 0,
         neutral: 0,
         negative: 0
+
     };
 
 
@@ -1088,7 +1335,9 @@ function renderSentiment(coins) {
                 sentiment === "negative"
             ) {
 
-                counts[sentiment]++;
+                counts[
+                    sentiment
+                ]++;
 
             } else {
 
@@ -1111,7 +1360,8 @@ function renderSentiment(coins) {
 
 
     if (center) {
-        center.textContent = total;
+        center.textContent =
+            total;
     }
 
 
@@ -1124,36 +1374,45 @@ function renderSentiment(coins) {
     if (legend) {
 
         const labels = {
+
             positive: "Positivo",
             neutral: "Neutro",
             negative: "Negativo"
+
         };
 
 
         legend.innerHTML =
             Object.entries(
                 counts
-            ).map(
-                ([key, value]) => `
+            )
+                .map(
+                    (
+                        [
+                            key,
+                            value
+                        ]
+                    ) => `
 
-                    <div class="sentiment-legend-item">
+                        <div class="sentiment-legend-item">
 
-                        <span
-                            class="sentiment-dot ${key}"
-                        ></span>
+                            <span
+                                class="sentiment-dot ${key}"
+                            ></span>
 
-                        <span class="sentiment-name">
-                            ${labels[key]}
-                        </span>
+                            <span class="sentiment-name">
+                                ${labels[key]}
+                            </span>
 
-                        <span class="sentiment-number">
-                            ${value}
-                        </span>
+                            <span class="sentiment-number">
+                                ${value}
+                            </span>
 
-                    </div>
+                        </div>
 
-                `
-            ).join("");
+                    `
+                )
+                .join("");
 
     }
 
@@ -1164,7 +1423,9 @@ function renderSentiment(coins) {
 }
 
 
-function renderSentimentChart(counts) {
+function renderSentimentChart(
+    counts
+) {
 
     const canvas =
         document.getElementById(
@@ -1172,8 +1433,13 @@ function renderSentimentChart(counts) {
         );
 
 
-    if (!canvas || !window.Chart) {
+    if (
+        !canvas ||
+        !window.Chart
+    ) {
+
         return;
+
     }
 
 
@@ -1190,6 +1456,7 @@ function renderSentimentChart(counts) {
         new Chart(
             canvas,
             {
+
                 type: "doughnut",
 
                 data: {
@@ -1201,23 +1468,31 @@ function renderSentimentChart(counts) {
                     ],
 
                     datasets: [
+
                         {
+
                             data: [
+
                                 counts.positive,
                                 counts.neutral,
                                 counts.negative
+
                             ],
 
                             backgroundColor: [
+
                                 "#43d39e",
                                 "#687386",
                                 "#ff6575"
+
                             ],
 
                             borderWidth: 0,
 
                             hoverOffset: 5
+
                         }
+
                     ]
 
                 },
@@ -1233,7 +1508,9 @@ function renderSentimentChart(counts) {
                     plugins: {
 
                         legend: {
+
                             display: false
+
                         },
 
                         tooltip: {
@@ -1257,7 +1534,9 @@ function renderSentimentChart(counts) {
                         }
 
                     }
+
                 }
+
             }
         );
 }
@@ -1294,13 +1573,18 @@ async function loadNews() {
 
 
         const news =
-            normalizeArray(response);
+            normalizeArray(
+                response
+            );
 
 
-        newsData = news;
+        newsData =
+            news;
 
 
-        renderNews(news);
+        renderNews(
+            news
+        );
 
 
         setNewsStatus(
@@ -1335,7 +1619,9 @@ async function loadNews() {
    RENDER NEWS
    ================================================================ */
 
-function renderNews(news) {
+function renderNews(
+    news
+) {
 
     const container =
         document.getElementById(
@@ -1363,7 +1649,10 @@ function renderNews(news) {
     const recent =
         [...news]
             .sort(
-                (a, b) =>
+                (
+                    a,
+                    b
+                ) =>
                     new Date(
                         b?.publishedAt ||
                         b?.createdAt ||
@@ -1375,20 +1664,27 @@ function renderNews(news) {
                         0
                     )
             )
-            .slice(0, 10);
+            .slice(
+                0,
+                10
+            );
 
 
     container.innerHTML =
-        recent.map(
-            article =>
-                renderNewsCard(
-                    article
-                )
-        ).join("");
+        recent
+            .map(
+                article =>
+                    renderNewsCard(
+                        article
+                    )
+            )
+            .join("");
 }
 
 
-function renderNewsCard(article) {
+function renderNewsCard(
+    article
+) {
 
     const title =
         article?.title ||
@@ -1422,7 +1718,9 @@ function renderNewsCard(article) {
             "positive",
             "negative",
             "neutral"
-        ].includes(sentiment)
+        ].includes(
+            sentiment
+        )
             ? sentiment
             : "neutral";
 
@@ -1435,7 +1733,6 @@ function renderNewsCard(article) {
     return `
 
         <article class="news-item">
-
 
             <span
                 class="news-sentiment-bar ${sentimentClass}"
@@ -1510,7 +1807,6 @@ function renderNewsCard(article) {
                     : ""
             }
 
-
         </article>
 
     `;
@@ -1521,7 +1817,9 @@ function renderNewsCard(article) {
    STATUS
    ================================================================ */
 
-function setAssetStatus(text) {
+function setAssetStatus(
+    text
+) {
 
     const element =
         document.getElementById(
@@ -1530,12 +1828,17 @@ function setAssetStatus(text) {
 
 
     if (element) {
-        element.textContent = text;
+
+        element.textContent =
+            text;
+
     }
 }
 
 
-function setNewsStatus(text) {
+function setNewsStatus(
+    text
+) {
 
     const element =
         document.getElementById(
@@ -1544,7 +1847,10 @@ function setNewsStatus(text) {
 
 
     if (element) {
-        element.textContent = text;
+
+        element.textContent =
+            text;
+
     }
 }
 
@@ -1619,7 +1925,9 @@ function renderErrorState(
    CHART
    ================================================================ */
 
-async function openCoinChart(coinId) {
+async function openCoinChart(
+    coinId
+) {
 
     const decodedId =
         decodeURIComponent(
@@ -1638,8 +1946,33 @@ async function openCoinChart(coinId) {
     }
 
 
+    /*
+    ------------------------------------------------------------
+    Normaliza novamente o ID antes de consultar o histórico.
+    Isso garante que o endpoint receba o ID esperado pelo
+    CoinGecko.
+    ------------------------------------------------------------
+    */
+
+    const normalizedCoinId =
+        getCoinId({
+            coinId: decodedId
+        });
+
+
+    if (!normalizedCoinId) {
+
+        showToast(
+            "Não foi possível identificar o ativo.",
+            "error"
+        );
+
+        return;
+    }
+
+
     currentCoinId =
-        decodedId;
+        normalizedCoinId;
 
 
     const modal =
@@ -1657,8 +1990,18 @@ async function openCoinChart(coinId) {
         coinsData.find(
             item =>
                 getCoinId(item) ===
-                decodedId
+                normalizedCoinId
         );
+
+
+    console.log(
+        "Abrindo gráfico:",
+        {
+            original: decodedId,
+            normalized: normalizedCoinId,
+            coin: coin
+        }
+    );
 
 
     prepareChartModal(
@@ -1677,12 +2020,18 @@ async function openCoinChart(coinId) {
 
 
     await loadCoinChart(
-        decodedId
+        normalizedCoinId
     );
 }
 
 
-function prepareChartModal(coin) {
+/* ================================================================
+   PREPARAR MODAL
+   ================================================================ */
+
+function prepareChartModal(
+    coin
+) {
 
     const title =
         document.getElementById(
@@ -1850,23 +2199,29 @@ async function loadCoinChart(
 
 
     if (chartContainer) {
+
         chartContainer.classList.remove(
             "hidden"
         );
+
     }
 
 
     if (loading) {
+
         loading.classList.remove(
             "hidden"
         );
+
     }
 
 
     if (error) {
+
         error.classList.add(
             "hidden"
         );
+
     }
 
 
@@ -1881,20 +2236,67 @@ async function loadCoinChart(
 
     try {
 
+        /*
+        --------------------------------------------------------
+        Mostra no console exatamente qual moeda está sendo
+        consultada.
+        --------------------------------------------------------
+        */
+
+        console.log(
+            "Buscando histórico:",
+            coinId
+        );
+
+
+        const url =
+            `${API_BASE_URL}/market/coins/` +
+            `${encodeURIComponent(
+                coinId
+            )}` +
+            `/history?period=day`;
+
+
+        console.log(
+            "URL do histórico:",
+            url
+        );
+
+
         const response =
             await fetchJson(
-                `${API_BASE_URL}/market/coins/${encodeURIComponent(
-                    coinId
-                )}/history?period=day`
+                url
             );
 
+
+        /*
+        --------------------------------------------------------
+        Aceita os dois formatos possíveis:
+
+        {
+            prices: [...]
+        }
+
+        ou
+
+        {
+            data: {
+                prices: [...]
+            }
+        }
+        --------------------------------------------------------
+        */
 
         const prices =
             Array.isArray(
                 response?.prices
             )
                 ? response.prices
-                : [];
+                : Array.isArray(
+                    response?.data?.prices
+                )
+                    ? response.data.prices
+                    : [];
 
 
         if (!prices.length) {
@@ -1928,9 +2330,11 @@ async function loadCoinChart(
 
 
         if (chartContainer) {
+
             chartContainer.classList.add(
                 "hidden"
             );
+
         }
 
 
@@ -1973,8 +2377,13 @@ function renderCoinChart(
         );
 
 
-    if (!canvas || !window.Chart) {
+    if (
+        !canvas ||
+        !window.Chart
+    ) {
+
         return;
+
     }
 
 
@@ -1989,6 +2398,7 @@ function renderCoinChart(
                     ) {
 
                         return {
+
                             timestamp:
                                 Number(
                                     item[0]
@@ -1998,6 +2408,7 @@ function renderCoinChart(
                                 Number(
                                     item[1]
                                 )
+
                         };
 
                     }
@@ -2009,6 +2420,7 @@ function renderCoinChart(
                     ) {
 
                         return {
+
                             timestamp:
                                 Number(
                                     item.timestamp ||
@@ -2020,6 +2432,7 @@ function renderCoinChart(
                                 Number(
                                     item.price
                                 )
+
                         };
 
                     }
@@ -2042,7 +2455,11 @@ function renderCoinChart(
 
 
     if (!normalized.length) {
-        return;
+
+        throw new Error(
+            "Nenhum ponto válido no histórico."
+        );
+
     }
 
 
@@ -2104,6 +2521,7 @@ function renderCoinChart(
                 variation
             );
 
+
         change.className =
             getVariationClass(
                 variation
@@ -2150,6 +2568,7 @@ function renderCoinChart(
         new Chart(
             canvas,
             {
+
                 type: "line",
 
                 data: {
@@ -2168,18 +2587,23 @@ function renderCoinChart(
                             backgroundColor:
                                 gradient,
 
-                            borderWidth: 2,
+                            borderWidth:
+                                2,
 
-                            pointRadius: 0,
+                            pointRadius:
+                                0,
 
-                            pointHoverRadius: 4,
+                            pointHoverRadius:
+                                4,
 
                             pointHoverBackgroundColor:
                                 "#8290ff",
 
-                            fill: true,
+                            fill:
+                                true,
 
-                            tension: 0.35
+                            tension:
+                                0.35
 
                         }
 
@@ -2189,22 +2613,29 @@ function renderCoinChart(
 
                 options: {
 
-                    responsive: true,
+                    responsive:
+                        true,
 
-                    maintainAspectRatio: false,
+                    maintainAspectRatio:
+                        false,
 
                     interaction: {
 
-                        mode: "index",
+                        mode:
+                            "index",
 
-                        intersect: false
+                        intersect:
+                            false
 
                     },
 
                     plugins: {
 
                         legend: {
-                            display: false
+
+                            display:
+                                false
+
                         },
 
                         tooltip: {
@@ -2215,7 +2646,8 @@ function renderCoinChart(
                             borderColor:
                                 "rgba(255,255,255,0.08)",
 
-                            borderWidth: 1,
+                            borderWidth:
+                                1,
 
                             titleColor:
                                 "#8f9aaa",
@@ -2223,7 +2655,8 @@ function renderCoinChart(
                             bodyColor:
                                 "#eef2f8",
 
-                            padding: 11,
+                            padding:
+                                11,
 
                             callbacks: {
 
@@ -2248,7 +2681,8 @@ function renderCoinChart(
                                 color:
                                     "rgba(255,255,255,0.035)",
 
-                                drawBorder: false
+                                drawBorder:
+                                    false
 
                             },
 
@@ -2257,10 +2691,14 @@ function renderCoinChart(
                                 color:
                                     "#505b6c",
 
-                                maxTicksLimit: 7,
+                                maxTicksLimit:
+                                    7,
 
                                 font: {
-                                    size: 9
+
+                                    size:
+                                        9
+
                                 }
 
                             }
@@ -2274,7 +2712,8 @@ function renderCoinChart(
                                 color:
                                     "rgba(255,255,255,0.035)",
 
-                                drawBorder: false
+                                drawBorder:
+                                    false
 
                             },
 
@@ -2284,7 +2723,10 @@ function renderCoinChart(
                                     "#505b6c",
 
                                 font: {
-                                    size: 9
+
+                                    size:
+                                        9
+
                                 },
 
                                 callback:
@@ -2333,7 +2775,8 @@ function closeCoinChart() {
     );
 
 
-    currentCoinId = null;
+    currentCoinId =
+        null;
 
 
     if (coinChart) {
@@ -2360,7 +2803,8 @@ async function refreshDashboard() {
 
     if (button) {
 
-        button.disabled = true;
+        button.disabled =
+            true;
 
         button.classList.add(
             "loading"
@@ -2390,7 +2834,8 @@ async function refreshDashboard() {
 
         if (button) {
 
-            button.disabled = false;
+            button.disabled =
+                false;
 
             button.classList.remove(
                 "loading"
@@ -2420,8 +2865,13 @@ function initializeMobileMenu() {
         );
 
 
-    if (!button || !sidebar) {
+    if (
+        !button ||
+        !sidebar
+    ) {
+
         return;
+
     }
 
 
@@ -2469,7 +2919,8 @@ function initializeKeyboard() {
         event => {
 
             if (
-                event.key === "Escape"
+                event.key ===
+                "Escape"
             ) {
 
                 closeCoinChart();
